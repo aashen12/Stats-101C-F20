@@ -1,2 +1,6 @@
 # Stats-101C-F20
-Stats 101C: Introduction to Statistical Models and Data Mining - Midterm and Final Projects
+Midterm and Final Projects for Stats 101C - Introduction to Statistical Models and Data Mining
+University of California, Los Angeles
+Fall Quarter 2020
+Instructor: Alan Vazquez
+Authors: Andy Shen, Ethan Allavarpu, Varan Nimar
