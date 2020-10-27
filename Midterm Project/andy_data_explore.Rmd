@@ -5,21 +5,62 @@ date: "10/27/2020"
 output: pdf_document
 ---
 
+```{r,message=FALSE}
+library(tidyverse)
+library(MASS) #lda, qda
+library(class) #knn
+```
+
 ```{r}
-setwd("/Users/andyshen/Desktop/UCLA/Fall Quarter 2020/Stats 101C/Midterm/ucla-stats101c-lec3")
+setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
 train <- read.csv("training.csv")
 test <- read.csv("test.csv")
 ```
 
+```{r}
+set.seed(5732)
+samp <- sample(1:nrow(train), floor(0.8 * nrow(train)), replace = FALSE)
+train1 <- train[samp, ]
+test_train <- train[-samp, ]
+```
 
 
 FamilyMemberCount, RVIS_percentile, N_Missense, intolerant_pNull, Gene_age, pLOF_Zscore
 
 VEST_score
 
-```{r}
+## LDA
 
+```{r}
+lda.mod <- lda(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, data = train1
+)
+preds <- predict(lda.mod, test_train, type = "response")$posterior
+preds <- apply(preds, 1, which.max) - 1
+tbl <- table(preds, test_train$class)
+ter <- sum(diag(tbl)) / sum(tbl)
+tbl
 ```
+
+Test error rate is `r round(1-ter, 3)`. \newline
+
+## QDA
+
+```{r}
+qda.mod <- qda(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, data = train1
+)
+preds <- predict(qda.mod, test_train, type = "response")$posterior
+preds <- apply(preds, 1, which.max) - 1
+tbl <- table(preds, test_train$class)
+ter <- sum(diag(tbl)) / sum(tbl)
+tbl
+```
+
+Test error rate is `r round(1-ter, 3)`. \newline
+
 
 
 
