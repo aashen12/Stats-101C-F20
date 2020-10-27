@@ -5,6 +5,8 @@ date: "10/27/2020"
 output: pdf_document
 ---
 
+# Traditional Techniques
+
 ```{r,message=FALSE}
 rm(list = ls())
 library(MASS) #lda, qda
@@ -17,6 +19,10 @@ library(caret)
 setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
 train <- read.csv("training.csv", stringsAsFactors = TRUE)
 test <- read.csv("test.csv", stringsAsFactors = TRUE)
+train$class <- factor(train$class)
+levels(train$class) <- c("NG", "OG", "TSG")
+test$class <- factor(test$class)
+levels(test$class) <- c("NG", "OG", "TSG")
 ```
 
 ```{r}
@@ -109,16 +115,62 @@ Test error rate is `r round(1-ter, 3)`. This is for K = `r best`.
 
 \pagebreak
 
-## Using `caret`
+# Using `caret`
 
 ```{r}
-tc <- trainControl(method = "CV", number = 5)
-knn_c <- caret::train(
+tc <- trainControl(
+  method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE
+) # setting up training technique
+```
+
+
+## LDA
+
+```{r}
+LDAfit <- caret::train(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, 
+  data = train1, method = "lda",
+  preProc = c("center", "scale"),
+  trControl = tc
+)
+```
+
+
+## QDA
+
+```{r}
+QDAfit <- caret::train(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, 
+  data = train1, method = "qda",
+  preProc = c("center", "scale"),
+  trControl = tc
+)
+```
+
+## Logistic Regression
+
+```{r, error=TRUE}
+LRfit <- caret::train(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, 
+  data = train1, method = "glm", family = "binomial",
+  preProc = c("center", "scale"),
+  trControl = tc
+)
+```
+
+
+## KNN
+
+```{r}
+KNNfit <- caret::train(
   class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
     intolerant_pNull + Gene_age + pLOF_Zscore, data = train1,
-  method = "knn"
+  method = "knn", preProc = c("center", "scale"), trControl = tc
 )
-knn_c
+ggplot(KNNfit) + theme_bw()
 ```
 
 
