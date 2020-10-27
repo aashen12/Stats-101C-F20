@@ -10,11 +10,13 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
 ```{r}
+set.seed(110920)
 # sample <- read.csv("sample.csv", stringsAsFactors = TRUE)
 # sample
 ```
-```{r, fig.height=10, fig.width=8}
+```{r}
 training <- read.csv("training.csv", stringsAsFactors = TRUE)
+sort(abs(cor(training)["class", ]), decreasing = TRUE)[2:19]
 training$class <- factor(training$class)
 levels(training$class) <- c("NG", "OG", "TSG")
 dim(training)
@@ -22,7 +24,8 @@ names(training)[c(1, 99)]
 barplot(table(training$class))
 table(training$class) / nrow(training)
 any(is.na(training))
-
+```
+```{r, fig.height=10, fig.width=8}
 library(ggplot2)
 scatter <- function(var) {
   ggplot(training, aes_string(var, "class")) +
@@ -50,6 +53,7 @@ for (var in names(training)[-99]) {
   diffs[k] <- all(TukeyHSD(model)$`factor(training$class)`[, 4] < 0.05)
   k <- k + 1
 }
+sort(sig[diffs])
 score <- function (conf_mat) {
   print(sum(diag(conf_mat) * c(1, 20, 20)))
   print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
@@ -69,12 +73,29 @@ classify <- function(probs) {
 }
 ```
 
-```{r}
+```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
-vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score, Missense_Entropy, BioGRID_clossness, Cell_proliferation_rate_CRISPR_KD, intolerant_pLI, BioGRID_log_degree, class)
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Broad_H4K20me1_percentage,
+                            H3K79me2_height,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score, Missense_Entropy, BioGRID_log_degree, class)
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
+cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
+library(reshape2)
+#reshape it
+melted_cor_mtx <- melt(cor_mtx)
+
+#draw the heatmap
+cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
+cor_heatmap = cor_heatmap +
+scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
+theme_minimal() +
+theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
+
+cor_heatmap
+```
+```{r}
+set.seed(nrow(training) +421314)
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.7, 
                                   list = FALSE)
@@ -114,7 +135,6 @@ best_subset <- regsubsets(class ~ ., data = training, nbest = 1, nvmax = 20,
                           intercept = TRUE, method = "forward",
                           really.big = TRUE)
 sumBS <- summary(best_subset)
-sumBS
 plot(best_subset)
 ```
 
