@@ -15,6 +15,8 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 ```{r, fig.height=10, fig.width=8}
 training <- read.csv("training.csv", stringsAsFactors = TRUE)
+training$class <- factor(training$class)
+levels(training$class) <- c("NG", "OG", "TSG")
 dim(training)
 names(training)[c(1, 99)]
 barplot(table(training$class))
@@ -35,4 +37,59 @@ grid.arrange(grobs = scat_plot[41:60], ncol = 4)
 grid.arrange(grobs = scat_plot[61:80], ncol = 4)
 grid.arrange(grobs = scat_plot[81:98], ncol = 4)
 ```
+
+
+```{r}
+sig <- logical(98)
+names(sig) <- names(training)[-99]
+k <- 1
+diffs <- logical(98)
+for (var in names(training)[-99]) {
+  model <- aov(training[[var]] ~ factor(training$class))
+  sig[k] <- summary(model)[[1]][1, 5]
+  diffs[k] <- all(TukeyHSD(model)$`factor(training$class)`[, 4] < 0.05)
+  k <- k + 1
+}
+score <- function (conf_mat) {
+  print(sum(diag(conf_mat) * c(1, 20, 20)))
+  print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
+}
+```
+
+```{r}
+library(dplyr)
+vars <- training %>% select(Broad_H4K20me1_percentage, Broad_H3K9ac_percentage, Inactivating_mutations_fraction,
+                            N_Splice, N_LOF, VEST_score, Missense_Entropy, N_Missense, Cell_proliferation_rate_CRISPR_KD, class)
+vars$class <- factor(vars$class)
+levels(vars$class) <- c("NG", "OG", "TSG")
+library(caret)
+train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
+knn_ft <- train(class ~ . - N_Missense, data = vars, method = "knn", preProc = c("center", "scale"),
+                trControl = train_cont, tuneGrid = expand.grid(k = seq(from = 5, to = 25, by = 5)))
+ggplot(knn_ft) + theme_bw()
+for (k in seq(from = 5, to = 25, by = 5)) {
+  knn_mod <- table("pred"=knn_ft$pred[,1][knn_ft$pred[,7] == k], "obs" = knn_ft$pred[,2][knn_ft$pred[,7] == k])
+  knn_mod
+  score(knn_mod)
+}
+train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
+knn_ft <- train(class ~ ., data = vars, method = "qda", preProc = c("center", "scale"),
+                trControl = train_cont)
+qda_mod <-table("pred"=knn_ft$pred[,1], "obs" = knn_ft$pred[,2])
+qda_mod
+score(qda_mod)
+train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
+knn_ft <- train(class ~ ., data = vars, method = "lda", preProc = c("center", "scale"),
+                trControl = train_cont)
+lda_mod <- table("pred"=knn_ft$pred[,1], "obs" = knn_ft$pred[,2])
+lda_mod
+score(lda_mod)
+library(leaps)
+best_subset <- regsubsets(class~., data = training, nbest = 1, nvmax = 10,
+                          intercept = TRUE, method = "forward",
+                          really.big = TRUE)
+sumBS <- summary(best_subset)
+plot(best_subset)
+```
+
 
