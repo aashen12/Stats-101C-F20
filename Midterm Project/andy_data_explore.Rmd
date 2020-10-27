@@ -6,15 +6,17 @@ output: pdf_document
 ---
 
 ```{r,message=FALSE}
+rm(list = ls())
 library(MASS) #lda, qda
 library(class) #knn
 library(tidyverse)
+library(caret)
 ```
 
 ```{r}
 setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
-train <- read.csv("training.csv")
-test <- read.csv("test.csv")
+train <- read.csv("training.csv", stringsAsFactors = TRUE)
+test <- read.csv("test.csv", stringsAsFactors = TRUE)
 ```
 
 ```{r}
@@ -86,7 +88,7 @@ testx <- test_traink %>% dplyr::select(
 )
 testy <- test_train$class
 
-rows <- 100 # max K = 100
+rows <- 40
 knn_mat <- matrix(NA, nrow = rows, ncol = length(testy))
 error_rate <- rep(NA, rows)
 for(i in 1:rows) {
@@ -105,9 +107,19 @@ ter <- sum(diag(best_tbl)) / sum(best_tbl)
 
 Test error rate is `r round(1-ter, 3)`. This is for K = `r best`. 
 
+\pagebreak
 
+## Using `caret`
 
-
+```{r}
+tc <- trainControl(method = "CV", number = 5)
+knn_c <- caret::train(
+  class ~ FamilyMemberCount + RVIS_percentile + N_Missense + 
+    intolerant_pNull + Gene_age + pLOF_Zscore, data = train1,
+  method = "knn"
+)
+knn_c
+```
 
 
 
