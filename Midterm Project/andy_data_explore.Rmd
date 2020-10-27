@@ -6,9 +6,9 @@ output: pdf_document
 ---
 
 ```{r,message=FALSE}
-library(tidyverse)
 library(MASS) #lda, qda
 library(class) #knn
+library(tidyverse)
 ```
 
 ```{r}
@@ -43,7 +43,9 @@ ter <- sum(diag(tbl)) / sum(tbl)
 tbl
 ```
 
-Test error rate is `r round(1-ter, 3)`. \newline
+Test error rate is `r round(1-ter, 3)`. 
+
+\pagebreak
 
 ## QDA
 
@@ -59,7 +61,54 @@ ter <- sum(diag(tbl)) / sum(tbl)
 tbl
 ```
 
-Test error rate is `r round(1-ter, 3)`. \newline
+Test error rate is `r round(1-ter, 3)`
+
+\pagebreak
+
+## KNN
+
+```{r}
+train1k <- train1 %>% dplyr::select(-class)
+test_traink <- test_train %>% dplyr::select(-class)
+
+for(col in 1:ncol(train1k)) {
+  train1k[, col] <- train1k[, col] / max(train1k[, col])
+  test_traink[, col] <- test_traink[, col] / max(test_traink[, col])
+} #standardizing. ncol(test) == ncol(train)
+
+trainx <- train1k %>% dplyr::select(
+  FamilyMemberCount, RVIS_percentile, N_Missense, intolerant_pNull, Gene_age, pLOF_Zscore
+)
+trainy <- train1$class
+
+testx <- test_traink %>% dplyr::select(
+  FamilyMemberCount, RVIS_percentile, N_Missense, intolerant_pNull, Gene_age, pLOF_Zscore
+)
+testy <- test_train$class
+
+rows <- 100 # max K = 100
+knn_mat <- matrix(NA, nrow = rows, ncol = length(testy))
+error_rate <- rep(NA, rows)
+for(i in 1:rows) {
+  knn_mat[i,] <- knn(trainx, testx, trainy, k = i)
+  tbl <- table("actual" = testy, "predicted" =  knn_mat[i,])
+  error_rate[i] <- 1 - (sum(diag(tbl)) / sum(tbl))
+}
+plot(error_rate, type = "l", col = "dodgerblue")
+points(error_rate, pch = 19, col = "dodgerblue")
+best <- which.min(error_rate)
+best_tbl <- table("actual" = testy, "predicted" =  knn_mat[best,])
+best_tbl
+ter <- sum(diag(best_tbl)) / sum(best_tbl)
+```
+
+
+Test error rate is `r round(1-ter, 3)`. This is for K = `r best`. 
+
+
+
+
+
 
 
 
