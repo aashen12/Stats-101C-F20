@@ -134,6 +134,11 @@ LDAfit <- caret::train(
   preProc = c("center", "scale"),
   trControl = tc
 )
+preds <- predict(LDAfit, test_train)
+tbl <- table(preds, test_train$class)
+ter <- sum(diag(tbl)) / sum(tbl)
+tbl
+ter
 ```
 
 
@@ -147,6 +152,11 @@ QDAfit <- caret::train(
   preProc = c("center", "scale"),
   trControl = tc
 )
+preds <- predict(QDAfit, test_train)
+tbl <- table(preds, test_train$class)
+ter <- sum(diag(tbl)) / sum(tbl)
+tbl
+ter
 ```
 
 ## Logistic Regression
@@ -171,6 +181,11 @@ KNNfit <- caret::train(
   method = "knn", preProc = c("center", "scale"), trControl = tc
 )
 ggplot(KNNfit) + theme_bw()
+preds <- predict(LDAfit, test_train)
+tbl <- table(preds, test_train$class)
+ter <- sum(diag(tbl)) / sum(tbl)
+tbl
+ter
 ```
 
 
