@@ -1,0 +1,25 @@
+---
+title: "Data Exploration"
+author: "Andy Shen"
+date: "10/27/2020"
+output: pdf_document
+---
+
+```{r}
+setwd("/Users/andyshen/Desktop/UCLA/Fall Quarter 2020/Stats 101C/Midterm/ucla-stats101c-lec3")
+train <- read.csv("training.csv")
+test <- read.csv("test.csv")
+```
+
+
+
+FamilyMemberCount, RVIS_percentile, N_Missense, intolerant_pNull, Gene_age, pLOF_Zscore
+
+VEST_score
+
+```{r}
+
+```
+
+
+
