@@ -16,6 +16,15 @@ library(caret)
 ```
 
 ```{r}
+find_score <- function(conf_mat) {
+  print(sum(diag(conf_mat) * c(1, 20, 20)))
+  final <- sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20))
+  final
+}
+```
+
+
+```{r}
 setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
 train <- read.csv("training.csv", stringsAsFactors = TRUE)
 test <- read.csv("test.csv", stringsAsFactors = TRUE)
@@ -136,9 +145,9 @@ LDAfit <- caret::train(
 )
 preds <- predict(LDAfit, test_train)
 tbl <- table(preds, test_train$class)
-ter <- sum(diag(tbl)) / sum(tbl)
+acc <- find_score(tbl)
 tbl
-ter
+acc
 ```
 
 
@@ -154,9 +163,9 @@ QDAfit <- caret::train(
 )
 preds <- predict(QDAfit, test_train)
 tbl <- table(preds, test_train$class)
-ter <- sum(diag(tbl)) / sum(tbl)
+acc <- find_score(tbl)
 tbl
-ter
+acc
 ```
 
 ## Logistic Regression
@@ -183,9 +192,9 @@ KNNfit <- caret::train(
 ggplot(KNNfit) + theme_bw()
 preds <- predict(LDAfit, test_train)
 tbl <- table(preds, test_train$class)
-ter <- sum(diag(tbl)) / sum(tbl)
+acc <- find_score(tbl)
 tbl
-ter
+acc
 ```
 
 
