@@ -1,0 +1,38 @@
+---
+title: "Preliminary Investigation"
+author: 'Ethan Allavarpu (UID: 405287603)'
+date: "10/27/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+```
+
+```{r}
+sample <- read.csv("sample.csv", stringsAsFactors = TRUE)
+# sample
+```
+```{r, fig.height=10, fig.width=8}
+training <- read.csv("training.csv", stringsAsFactors = TRUE)
+dim(training)
+names(training)[c(1, 99)]
+barplot(table(training$class))
+table(training$class) / nrow(training)
+any(is.na(training))
+
+library(ggplot2)
+scatter <- function(var) {
+  ggplot(training, aes_string(var, "class")) +
+    geom_jitter(width = 0.05, height = 0.1, size = 0.1,
+                colour = rgb(0, 0, 0, alpha = 1 / 3))
+}
+scat_plot <- lapply(names(training)[-99], scatter)
+library(gridExtra)
+grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+```
+
