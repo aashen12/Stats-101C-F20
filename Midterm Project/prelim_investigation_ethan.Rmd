@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
 ```{r}
-sample <- read.csv("sample.csv", stringsAsFactors = TRUE)
+# sample <- read.csv("sample.csv", stringsAsFactors = TRUE)
 # sample
 ```
 ```{r, fig.height=10, fig.width=8}
