@@ -35,7 +35,7 @@ levels(test$class) <- c("NG", "OG", "TSG")
 ```
 
 ```{r}
-set.seed(5732)
+set.seed(110920)
 samp <- sample(1:nrow(train), floor(0.8 * nrow(train)), replace = FALSE)
 train1 <- train[samp, ]
 test_train <- train[-samp, ]
