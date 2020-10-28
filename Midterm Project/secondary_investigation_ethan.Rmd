@@ -27,11 +27,11 @@ scatter <- function(var) {
 }
 scat_plot <- lapply(names(training)[-99], scatter)
 library(gridExtra)
-grid.arrange(grobs = scat_plot[1:20], ncol = 4)
-grid.arrange(grobs = scat_plot[21:40], ncol = 4)
-grid.arrange(grobs = scat_plot[41:60], ncol = 4)
-grid.arrange(grobs = scat_plot[61:80], ncol = 4)
-grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+# grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+# grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+# grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+# grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+# grid.arrange(grobs = scat_plot[81:98], ncol = 4)
 outlier_index <- sort(table(unlist(lapply(training[,-99], outlier))), decreasing = TRUE)
 outlier_index[1:100]
 training <- training[-as.numeric(names(outlier_index)[1:50]),]
@@ -93,11 +93,20 @@ classify <- function(probs) {
 
 ```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
+<<<<<<< HEAD
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
+=======
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, 
+                            N_Missense, Missense_Entropy, N_Splice, 
+                            LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree, 
+                            Broad_H3K79me2_percentage, intolerant_pLI, 
+                            RVIS_percentile, Polyphen2, Broad_H3K36me3_percentage, 
+                            class)
+>>>>>>> f96ab871754f800b1f027fb1a924bf6fc3dd1c45
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
 cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
@@ -117,11 +126,19 @@ cor_heatmap
 
 ```{r}
 library(dplyr)
+<<<<<<< HEAD
 set.seed(1234)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
+=======
+set.seed(nrow(training) + 2222)
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, 
+                            Missense_Entropy, N_Splice, LOF_TO_Total_Ratio, 
+                            VEST_score, BioGRID_log_degree, Broad_H3K79me2_percentage,
+                            Gene_age,
+>>>>>>> f96ab871754f800b1f027fb1a924bf6fc3dd1c45
                             Polyphen2, Broad_H3K36me3_percentage, class)
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
