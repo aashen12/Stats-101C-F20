@@ -16,6 +16,15 @@ library(caret)
 ```
 
 ```{r}
+find_score <- function(conf_mat) {
+  print(sum(diag(conf_mat) * c(1, 20, 20)))
+  final <- sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20))
+  final
+}
+```
+
+
+```{r}
 setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
 train <- read.csv("training.csv", stringsAsFactors = TRUE)
 test <- read.csv("test.csv", stringsAsFactors = TRUE)
@@ -26,7 +35,7 @@ levels(test$class) <- c("NG", "OG", "TSG")
 ```
 
 ```{r}
-set.seed(5732)
+set.seed(110920)
 samp <- sample(1:nrow(train), floor(0.8 * nrow(train)), replace = FALSE)
 train1 <- train[samp, ]
 test_train <- train[-samp, ]
@@ -134,6 +143,11 @@ LDAfit <- caret::train(
   preProc = c("center", "scale"),
   trControl = tc
 )
+preds <- predict(LDAfit, test_train)
+tbl <- table(preds, test_train$class)
+acc <- find_score(tbl)
+tbl
+acc
 ```
 
 
@@ -147,6 +161,11 @@ QDAfit <- caret::train(
   preProc = c("center", "scale"),
   trControl = tc
 )
+preds <- predict(QDAfit, test_train)
+tbl <- table(preds, test_train$class)
+acc <- find_score(tbl)
+tbl
+acc
 ```
 
 ## Logistic Regression
@@ -171,6 +190,11 @@ KNNfit <- caret::train(
   method = "knn", preProc = c("center", "scale"), trControl = tc
 )
 ggplot(KNNfit) + theme_bw()
+preds <- predict(LDAfit, test_train)
+tbl <- table(preds, test_train$class)
+acc <- find_score(tbl)
+tbl
+acc
 ```
 
 
