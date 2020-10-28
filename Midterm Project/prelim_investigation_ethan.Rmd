@@ -24,6 +24,17 @@ names(training)[c(1, 99)]
 barplot(table(training$class))
 table(training$class) / nrow(training)
 any(is.na(training))
+
+
+outlier <- function(data) {
+  q1q3 <- IQR(data)
+  low <- median(data) - 1.5 * q1q3
+  high <- median(data) + 1.5 * q1q3
+  which(data < low | data > high)
+}
+outlier_index <- sort(table(unlist(lapply(training[,-99], outlier))), decreasing = TRUE)
+outlier_index
+# training <- training[-as.numeric(names(outlier_index)[1:50]),]
 ```
 ```{r, fig.height=10, fig.width=8}
 library(ggplot2)
@@ -75,9 +86,10 @@ classify <- function(probs) {
 
 ```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
-vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Broad_H4K20me1_percentage,
-                            H3K79me2_height,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score, Missense_Entropy, BioGRID_log_degree, class)
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree, Broad_H3K79me2_percentage,
+                            RVIS_percentile,
+                            Polyphen2, Broad_H3K36me3_percentage, class)
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
 cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
@@ -95,35 +107,37 @@ theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 cor_heatmap
 ```
 ```{r}
-set.seed(nrow(training) +421314)
+set.seed(3811)
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.7, 
                                   list = FALSE)
 vars_train <- vars[vars_test, ]
 vars_test <- vars[-vars_test, ]
 
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
+train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+
+
 knn_ft <- train(class ~ ., data = vars_train, method = "knn", preProc = c("center", "scale"),
-                trControl = train_cont, tuneGrid = expand.grid(k = seq(from = 1, to = 11, by = 2)))
+                trControl = train_cont, tuneGrid = expand.grid(k = seq(from = 1, to = 25, by = 5)))
 ggplot(knn_ft) + theme_bw()
-for (k in seq(from = 1, to = 11, by = 2)) {
+for (k in seq(from = 1, to = 25, by = 5)) {
   preds <- predict(knn_ft, newdata = vars_test, type = "prob")
   knn_mod <- table("pred"=unlist(apply(preds, 1, classify)), "obs" = vars_test$class)
-  knn_mod
+  print(knn_mod)
   score(knn_mod)
 }
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
-knn_ft <- train(class ~ ., data = vars_train, method = "qda", preProc = c("center", "scale"),
+train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+qda_ft <- train(class ~ ., data = vars_train, method = "qda", preProc = c("center", "scale"),
                 trControl = train_cont)
-preds <- predict(knn_ft, newdata = vars_test, type = "prob")
+preds <- predict(qda_ft, newdata = vars_test, type = "prob")
 
 qda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
 qda_mod
 score(qda_mod)
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
-knn_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
+train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
                 trControl = train_cont)
-preds <- predict(knn_ft, newdata = vars_test, type = "prob")
+preds <- predict(lda_ft, newdata = vars_test, type = "prob")
 
 lda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
 lda_mod
@@ -138,4 +152,20 @@ sumBS <- summary(best_subset)
 plot(best_subset)
 ```
 
+```{r}
+tests <- read.csv("test.csv")
+rel_vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree, Broad_H3K79me2_percentage,
+                            RVIS_percentile,
+                            Polyphen2, Broad_H3K36me3_percentage, class)
+for (i in 1:11) {
+  rel_vars[[i]] <- (rel_vars[[i]] - lda_ft$preProcess$mean[i])/ lda_ft$preProcess$std[i]
+}
+preds <- predict(lda_ft, newdata = tests, type = "prob")
+preds <- apply(preds, 1, classify)
+names(preds) <- tests$id
+csv_file <- data.frame("id" = tests$id,
+                       "class" = preds)
+write.csv(csv_file, "modelpredictions.csv", row.names = FALSE)
+```
 
