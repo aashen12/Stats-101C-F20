@@ -9,6 +9,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
+# Setup
+
 ```{r}
 set.seed(110920)
 library(tidyverse)
@@ -27,6 +29,7 @@ barplot(table(training$class))
 table(training$class) / nrow(training)
 any(is.na(training))
 ```
+
 ```{r, fig.height=10, fig.width=8}
 # library(ggplot2)
 # scatter <- function(var) {
@@ -56,17 +59,19 @@ for (var in names(training)[-99]) {
   k <- k + 1
 }
 head(sort(sig[diffs]), 15)
+
 score <- function (conf_mat) {
   print(sum(diag(conf_mat) * c(1, 20, 20)))
   print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
-}
+} #weighted scoring algorithm
 
 classify <- function(probs) {
   if (any(probs[2:3] > 0.05)) {
     subset <- probs[2:3]
     output <- which(subset == max(subset))
     if (length(output) > 1) {
-        output <- sample(1:2, 1)
+      output <- sample(1:2, 1)
+      # if OG and TSG both have equal probabilities, pick one randomly
     }
   } else {
     output <- 0
@@ -77,26 +82,40 @@ classify <- function(probs) {
 
 
 ```{r, fig.height = 7, fig.width = 7}
-vars <- training %>% dplyr::select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Broad_H4K20me1_percentage,
-                            H3K79me2_height,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score, Missense_Entropy, BioGRID_log_degree, class)
+# Selection of Predictors
+vars <- training %>% dplyr::select(
+  Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Broad_H4K20me1_percentage, 
+  H3K79me2_height, N_Splice, LOF_TO_Total_Ratio, VEST_score, 
+  Missense_Entropy, BioGRID_log_degree, class
+)
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
+
+
 cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
 library(reshape2)
 #reshape it
 melted_cor_mtx <- melt(cor_mtx)
 
 #draw the heatmap
-cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
+cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
 cor_heatmap = cor_heatmap +
-scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
+scale_fill_gradient2(
+  low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), 
+  space = "Lab", name="Pearson\nCorrelation"
+) + 
 theme_minimal() +
 theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 
 cor_heatmap
 ```
 
+\pagebreak
+
+# Techniques
+
+## KNN
 
 ```{r}
 set.seed(nrow(training) +421314)
@@ -106,33 +125,59 @@ vars_test <- createDataPartition(vars$class, p = 0.7,
 vars_train <- vars[vars_test, ]
 vars_test <- vars[-vars_test, ]
 
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
-knn_ft <- train(class ~ ., data = vars_train, method = "knn", preProc = c("center", "scale"),
-                trControl = train_cont, tuneGrid = expand.grid(k = seq(from = 1, to = 11, by = 2)))
-ggplot(knn_ft) + theme_bw()
+train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, 
+                           savePredictions = TRUE
+                           )
+mod <- train(class ~ ., data = vars_train, method = "knn", 
+                preProc = c("center", "scale"),
+                trControl = train_cont, 
+                tuneGrid = expand.grid(k = seq(from = 1, to = 11, by = 2))
+                )
+
+ggplot(mod) + theme_bw()
+
 for (k in seq(from = 1, to = 11, by = 2)) {
-  preds <- predict(knn_ft, newdata = vars_test, type = "prob")
-  knn_mod <- table("pred"=unlist(apply(preds, 1, classify)), "obs" = vars_test$class)
+  preds <- predict(mod, newdata = vars_test, type = "prob")
+  knn_mod <- table("pred" = unlist(apply(preds, 1, classify)), "obs" = vars_test$class)
   knn_mod
   score(knn_mod)
 }
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
-knn_ft <- train(class ~ ., data = vars_train, method = "qda", preProc = c("center", "scale"),
-                trControl = train_cont)
-preds <- predict(knn_ft, newdata = vars_test, type = "prob")
+```
 
-qda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
+\pagebreak
+
+## QDA
+
+```{r}
+train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, 
+                           savePredictions = TRUE
+                           )
+mod <- train(class ~ ., data = vars_train, method = "qda", 
+                preProc = c("center", "scale"),
+                trControl = train_cont)
+preds <- predict(mod, newdata = vars_test, type = "prob")
+
+qda_mod <- table("pred" = apply(preds, 1, classify), "obs" = vars_test$class)
 qda_mod
 score(qda_mod)
-train_cont <- trainControl(method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE)
-knn_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
-                trControl = train_cont)
-preds <- predict(knn_ft, newdata = vars_test, type = "prob")
+```
+
+\pagebreak
+
+## LDA
+
+```{r}
+train_cont <- trainControl(
+  method = "cv", number = 10, classProbs = TRUE, savePredictions = TRUE
+)
+mod <- train(class ~ ., data = vars_train, method = "lda", 
+                preProc = c("center", "scale"),
+                trControl = train_cont
+                )
+preds <- predict(mod, newdata = vars_test, type = "prob")
 
 lda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
 lda_mod
 score(lda_mod)
 ```
-
-
 
