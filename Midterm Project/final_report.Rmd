@@ -8,4 +8,5 @@ output: pdf_document
 LDA
 Centering/scaling
 Techniques for refining predictors
+
 Outliers
