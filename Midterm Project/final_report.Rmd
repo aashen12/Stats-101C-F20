@@ -1,0 +1,9 @@
+---
+title: "Final Report - Midterm Classification Project"
+subtitle: "Stats 101C Lecture 3"
+author: "Andy Shen"
+date: "Fall 2020"
+output: pdf_document
+---
+
+
