@@ -59,6 +59,8 @@ grid.arrange(grobs = scat_plot[81:98], ncol = 4)
 ```
 
 ```{r}
+library(dplyr)
+training <- training %>% mutate("H3K9ac" = H3K9ac_height * H3K9ac_width)
 sig <- logical(98)
 names(sig) <- names(training)[-99]
 k <- 1
@@ -93,20 +95,17 @@ classify <- function(probs) {
 
 ```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
-<<<<<<< HEAD
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
-=======
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, 
                             N_Missense, Missense_Entropy, N_Splice, 
                             LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree, 
                             Broad_H3K79me2_percentage, intolerant_pLI, 
                             RVIS_percentile, Polyphen2, Broad_H3K36me3_percentage, 
                             class)
->>>>>>> f96ab871754f800b1f027fb1a924bf6fc3dd1c45
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
 cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
@@ -126,19 +125,13 @@ cor_heatmap
 
 ```{r}
 library(dplyr)
-<<<<<<< HEAD
 set.seed(1234)
-vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                             Missense_Entropy,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score,
+                            BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
-=======
-set.seed(nrow(training) + 2222)
-vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, 
-                            Missense_Entropy, N_Splice, LOF_TO_Total_Ratio, 
-                            VEST_score, BioGRID_log_degree, Broad_H3K79me2_percentage,
-                            Gene_age,
->>>>>>> f96ab871754f800b1f027fb1a924bf6fc3dd1c45
                             Polyphen2, Broad_H3K36me3_percentage, class)
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
@@ -177,8 +170,10 @@ score(lda_mod)
 
 ```{r}
 tests <- read.csv("test.csv")
-rel_vars <- tests %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
+rel_vars <- tests %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                             Missense_Entropy,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score,
+                            BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
@@ -190,12 +185,12 @@ preds <- apply(preds, 1, classify)
 names(preds) <- tests$id
 csv_file <- data.frame("id" = tests$id,
                        "class" = preds)
-write.csv(csv_file, "modelpredictions2.csv", row.names = FALSE)
+#write.csv(csv_file, "modelpredictions2.csv", row.names = FALSE)
 model_1 <- read.csv("modelpredictions.csv")
 model_2 <- read.csv("modelpredictions2.csv")
 model_1_beta <- read.csv("modelpredictions_beta.csv")
 table(model_1$class, model_1_beta$class)
-table("BEST MOD" = model_2$class, model_1_beta$class)
+table("BEST MOD" = model_2$class, csv_file$class)
 mean(model_1$class == csv_file$class)
 ```
 
