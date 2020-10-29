@@ -8,3 +8,6 @@ Fall Quarter 2020
 Instructor: Alan Vazquez
 
 Authors: Andy Shen, Ethan Allavarpu, Varan Nimar
+
+Current Best Model: secondary_investigation_UPDATED_ethan.Rmd
+Linked Predictions: modelpredictions2_beta.csv
