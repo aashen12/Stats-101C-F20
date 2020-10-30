@@ -78,7 +78,7 @@ score <- function (conf_mat) {
 }
 
 classify <- function(probs) {
-  if (any(probs[2:3] > 0.05)) {
+  if (any(probs[2:3] > 1/41)) {
     subset <- probs[2:3]
     output <- which(subset == max(subset))
     if (length(output) > 1) {
@@ -121,7 +121,7 @@ cor_heatmap
 
 ```{r}
 library(dplyr)
-set.seed(12)
+set.seed(123)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                              Missense_Entropy, log_gene_length, Missense_Damaging_TO_Benign_Ratio,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
@@ -129,6 +129,7 @@ vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
+
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
                                   list = FALSE)
@@ -162,6 +163,8 @@ preds <- predict(lda_ft, newdata = vars_test, type = "prob")
 lda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
 lda_mod
 score(lda_mod)
+library(MLeval)
+results <- evalm(list(knn_ft, qda_ft, lda_ft), gnames = c("KNN", "QDA", "LDA"))
 ```
 
 ```{r}
@@ -171,12 +174,13 @@ preds <- apply(preds, 1, classify)
 names(preds) <- tests$id
 csv_file <- data.frame("id" = tests$id,
                        "class" = preds)
-#write.csv(csv_file, "modelpredictions2.csv", row.names = FALSE)
+write.csv(csv_file, "modelpredictions3.csv", row.names = FALSE)
 model_1 <- read.csv("modelpredictions.csv")
 model_2 <- read.csv("modelpredictions2.csv")
 model_1_beta <- read.csv("modelpredictions_beta.csv")
+model_2_beta <- read.csv("modelpredictions2_beta.csv")
 table(model_1$class, model_1_beta$class)
-table("BEST MOD" = model_2$class, csv_file$class)
+table("BEST MOD" = model_2_beta$class, csv_file$class)
 mean(model_1$class == csv_file$class)
 ```
 
