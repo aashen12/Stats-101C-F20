@@ -64,18 +64,24 @@ sig <- logical(98)
 names(sig) <- names(training)[-99]
 k <- 1
 diffs <- logical(98)
+
+## Perform anova for differences in means across the three difference classes
 for (var in names(training)[-99]) {
   model <- aov(training[[var]] ~ factor(training$class))
   sig[k] <- summary(model)[[1]][1, 5]
+  # see which variables have significance for all pairwise comparison
   diffs[k] <- all(TukeyHSD(model)$`factor(training$class)`[, 4] < 0.05)
   k <- k + 1
 }
 sort(sig[diffs])
+
+#function to calculate wca
 score <- function (conf_mat) {
   print(sum(diag(conf_mat) * c(1, 20, 20)))
   print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
 }
 
+# Set new threshold to account for unbalanced data
 classify <- function(probs) {
   if (any(probs[2:3] > 0.05)) {
     subset <- probs[2:3]
@@ -94,6 +100,7 @@ classify <- function(probs) {
 
 ```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
+# predictors selected based on ANOVA tests as well as scatter plots for clear difference in means
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore, Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
@@ -133,10 +140,12 @@ vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
 library(caret)
+# higher partition to decrease bias  (particularly with LDA)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
                                   list = FALSE)
 vars_train <- vars[vars_test, ]
 vars_test <- vars[-vars_test, ]
+
 
 train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
 
