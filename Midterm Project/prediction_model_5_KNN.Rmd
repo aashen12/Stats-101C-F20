@@ -34,13 +34,37 @@ library(gridExtra)
 outlier_index <- sort(table(unlist(lapply(training[,-99], outlier))), decreasing = TRUE)
 outlier_index[1:100]
 training <- training[-as.numeric(names(outlier_index)[1:50]),]
+sort(training$Missense_TO_Silent_Ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$Missense_TO_Silent_Ratio > 100), ]
+sort(training$Missense_KB_Ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$Missense_KB_Ratio > 2000), ]
+sort(training$LOF_TO_Silent_Ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$LOF_TO_Silent_Ratio > 5), ]
+sort(training$Gene_expression_Z_score, decreasing = TRUE)[1:10]
 training <- training[-which(training$Gene_expression_Z_score > 4), ]
+sort(training$dN_to_dS_ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$dN_to_dS_ratio > 5),]
+sort(training$Silent_KB_Ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$Silent_KB_Ratio > 200), ]
+sort(training$Lost_start_and_stop_fraction, decreasing = TRUE)[1:10]
 training <- training[-which(training$Lost_start_and_stop_fraction > 0.2),]
+sort(training$Synonymous_Zscore, decreasing = FALSE)[1:10]
+training <- training[-which(training$Synonymous_Zscore < -15), ]
+numeric_training <- training[,-99]
+
+n_zeroes <- rep(NA, nrow(numeric_training))
+
+for(i in seq_len(nrow(numeric_training))){
+  row_i_zeroes <- 0
+  for(j in seq_len(ncol(numeric_training))){
+    if(round(numeric_training[i,j], digits = 5) == 0){
+      row_i_zeroes <- row_i_zeroes + 1
+    }
+  }
+  n_zeroes[i] <- row_i_zeroes
+}
+n_zeroes[1:100]
+training <- training[n_zeroes <= 50, ]
 ```
 
 ```{r}
@@ -78,7 +102,7 @@ score <- function (conf_mat) {
 }
 
 classify <- function(probs) {
-  if (any(probs[2:3] > 1 / 41)) {
+  if (any(probs[2:3] > 1 / 22)) {
     subset <- probs[2:3]
     output <- which(subset == max(subset))
     if (length(output) > 1) {
@@ -121,64 +145,7 @@ cor_heatmap
 
 ```{r}
 library(dplyr)
-distances <- function(data) {
-  dist_mat <- matrix(nrow = length(data), ncol = length(data))
-  for (i in seq_len(nrow(dist_mat))) {
-    for (j in seq_len(ncol(dist_mat))) {
-      dist_mat[i, j] <- sqrt((data[i] - data[j])^2) 
-    }
-  }
-  total_avg <- mean(dist_mat)
-  subsets <- list()
-  for (k in levels(training$class)) {
-    subsets[[i]] <- dist_mat[training$class == k, training$class == k]
-  }
-  subsets <- unlist(subsets)
-  mean(subsets) / total_avg
-}
-get_pairwise_dists <- function(m)
-{
-  num_rows = nrow(m)
-  num_cols = ncol(m)
-  
-  m_1 = matrix(rep(as.matrix(m), each=num_rows), c(num_rows^2, num_cols), byrow=FALSE)
-  m_2 = matrix(rep(t(as.matrix(m)), num_rows), c(num_rows^2, num_cols), byrow=TRUE)
-  dists = sqrt(rowSums((m_1 - m_2)^2))
-  D = matrix(dists, c(num_rows,num_rows), byrow=TRUE)
-  return(D)
-}
-
-```
-
-
-```{r}
-process_bootstrap_samples <- function(d, num_bootstrap_samples)
-{
-  var_names = names(d)[names(d) != 'class']
-  r_vals = rep(0, num_bootstrap_samples)
-  for (i in 1:num_bootstrap_samples)
-  {
-    #generate a random bootstrap sample (replace=TRUE is CRUCIAL)
-    bootstrap_sample = d[sample(nrow(d), nrow(d), replace=TRUE), ]
-    
-    #compuate the within-class pairwise distances
-    c0_dists = get_pairwise_dists(bootstrap_sample[bootstrap_sample$class == 0, var_names])
-    c1_dists = get_pairwise_dists(bootstrap_sample[bootstrap_sample$class == 1, var_names])
-    c2_dists = get_pairwise_dists(bootstrap_sample[bootstrap_sample$class == 2, var_names])
-    
-    #compuate all pairwise distances
-    all_dists = get_pairwise_dists(bootstrap_sample[, var_names])
-    
-    #compuate the clustering coefficient 
-    r = mean(c(c0_dists, c1_dists, c2_dists)) / mean(all_dists)
-    r_vals[i] = r
-  }
-  
-  hist(r_vals, main=var_names)
-  abline(v=mean(r_vals))
-}
-
-set.seed(123)
+set.seed(12)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                              Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
@@ -186,7 +153,6 @@ vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                             Broad_H3K79me2_percentage, FamilyMemberCount,
                             S50_score_replication_timing, Gene_expression_Z_score,
                             Polyphen2, Broad_H3K36me3_percentage, class)
-
 library(caret)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
                                   list = FALSE)
@@ -197,8 +163,9 @@ train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePre
 
 
 knn_ft <- train(class ~ ., data = vars_train, method = "knn", preProc = c("center", "scale"),
-                trControl = train_cont, tuneGrid = expand.grid(k = seq(from = 1, to = 25, by = 5)))
-for (k in seq(from = 1, to = 25, by = 5)) {
+                trControl = train_cont, tuneGrid = expand.grid(k = 40))
+for (k in 40) {
+  print(k)
   preds <- predict(knn_ft, newdata = vars_test, type = "prob")
   knn_mod <- table("pred"=unlist(apply(preds, 1, classify)), "obs" = vars_test$class)
   print(knn_mod)
@@ -208,18 +175,18 @@ for (k in seq(from = 1, to = 25, by = 5)) {
 
 ```{r create_preds}
 tests <- read.csv("test.csv")
-preds <- predict(lda_ft, newdata = tests, type = "prob")
+preds <- predict(knn_ft, newdata = tests, type = "prob")
 preds <- apply(preds, 1, classify)
 names(preds) <- tests$id
 csv_file <- data.frame("id" = tests$id,
                        "class" = preds)
-# write.csv(csv_file, "modelpredictions4.csv", row.names = FALSE)
+ write.csv(csv_file, "modelpredictions5_knn.csv", row.names = FALSE)
 model_1 <- read.csv("modelpredictions.csv")
 model_2 <- read.csv("modelpredictions2.csv")
 model_1_beta <- read.csv("modelpredictions_beta.csv")
 model_2_beta <- read.csv("modelpredictions2_beta.csv")
 model_3 <- read.csv("modelpredictions3.csv")
 table(model_1$class, model_1_beta$class)
-table("BEST MOD" = model_3$class, csv_file$class)
+table("BEST MOD" = model_2_beta$class, csv_file$class)
 mean(model_1$class == csv_file$class)
 ```
