@@ -121,7 +121,7 @@ cor_heatmap
 
 ```{r}
 library(dplyr)
-set.seed(123)
+set.seed(12)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                              Missense_Entropy, log_gene_length, Missense_Damaging_TO_Benign_Ratio,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
