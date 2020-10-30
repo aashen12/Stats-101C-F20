@@ -1,0 +1,99 @@
+---
+title: "Exploratory Analysis: Why are there so many zeroes???"
+output: pdf_document
+author: Varan Nimar
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Data cleaning from Ethan's analysis
+
+training <- read.csv("training.csv", stringsAsFactors = TRUE)
+training$class <- factor(training$class)
+levels(training$class) <- c("NG", "OG", "TSG")
+
+outlier <- function(data) {
+  low <- mean(data) - 3 * sd(data)
+  high <- mean(data) + 3 * sd(data)
+  which(data < low | data > high)
+}
+library(ggplot2)
+scatter <- function(var) {
+  ggplot(training, aes_string(var, "class")) +
+    geom_jitter(width = 0.05, height = 0.1, size = 0.1,
+                colour = rgb(0, 0, 0, alpha = 1 / 3))
+}
+scat_plot <- lapply(names(training)[-99], scatter)
+library(gridExtra)
+# grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+# grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+# grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+# grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+# grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+outlier_index <- sort(table(unlist(lapply(training[,-99], outlier))), decreasing = TRUE)
+outlier_index[1:100]
+training <- training[-as.numeric(names(outlier_index)[1:50]),]
+training <- training[-which(training$Missense_TO_Silent_Ratio > 100), ]
+training <- training[-which(training$Missense_KB_Ratio > 2000), ]
+training <- training[-which(training$LOF_TO_Silent_Ratio > 5), ]
+training <- training[-which(training$Gene_expression_Z_score > 4), ]
+training <- training[-which(training$dN_to_dS_ratio > 5),]
+training <- training[-which(training$Silent_KB_Ratio > 200), ]
+training <- training[-which(training$Lost_start_and_stop_fraction > 0.2),]
+```
+
+
+```{r}
+#Arguably easier to look at numbers max/min and see if anything stands out-- turns out it's not, just 0's
+
+# A LOT of observations have '0' for many variables. Is that meaningful? It could be. 
+#Let's see how many there are
+numeric_training <- training[,-99]
+
+n_zeroes <- rep(NA, nrow(numeric_training))
+
+for(i in seq_len(nrow(numeric_training))){
+  row_i_zeroes <- 0
+  for(j in seq_len(ncol(numeric_training))){
+    if(round(numeric_training[i,j], digits = 5) == 0){
+      row_i_zeroes <- row_i_zeroes + 1
+    }
+  }
+  n_zeroes[i] <- row_i_zeroes
+}
+
+head(sort(n_zeroes, decreasing = TRUE), n = 500)
+tail(sort(n_zeroes, decreasing = TRUE), n = 500)
+```
+
+I think we should cross-reference which variables we're using for our final model, and see if there are any trends in genes that have all 0's for those variables. If not, maybe we can remove them? 
+
+Otherwise I think we should definitely test throwing out observations with 80+ zeroes and see how that affects our accuracy, could very well be dragging it down.
+
+It's a bit difficult to tell what transformations would be appropriate, especially with so many zeroes. If we plan on a log transformation we'll have to account for that (possibly take `log(x+1)`). Or do a different kind of transformation (square root or something of the sort). Those seem like the popular ways of dealing with data skewed by zeroes.
+
+I had some trouble getting Box Cox to work on our LDA model, but it might be worth keeping at it to check for the effectiveness of polynomial/log transforms, the latter of which we may have to check manually. 
+
+
+
+```{r}
+# Code graciously provided by Ethan Allavarpu
+library(ggplot2)
+scatter <- function(var) {
+  ggplot(training, aes_string(var, "class")) +
+    geom_jitter(width = 0.05, height = 0.1, size = 0.1,
+                colour = rgb(0, 0, 0, alpha = 1 / 3))
+}
+scat_plot <- lapply(names(training)[-99], scatter)
+library(gridExtra)
+grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+```
+
