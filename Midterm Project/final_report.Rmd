@@ -10,11 +10,9 @@ output: pdf_document
 
 The purpose of this analysis is to identify certain genes that play a role in cancer. We apply statistical learning techniques to a dataset of genes and a large number of mutation-related, genomic, phenotype, and epigenetic features; with the goal of identifying oncogenes (OGs), tumor suppressor genes (TSGs), and neutral genes (NGs), ultimately aiding future research into cancer prevention, diagnosis, and treatment.\newline
 
-Upon plotting each predictor against its respective gene class, we noticed that there existed outliers for many predictor variables in the dataset. Most plots saw clusters of points in certain locations without much variability, but there was always at least one stray point in many of the plots that stood out and did not fit the general trend of the plot. We decided to remove the top 50 observations containing the greatest number of outliers, as well as extreme points that clearly stood out as unusual when examining the scatterplots for each predictor. Because there were no unknown (`NA`) values in the dataset, we did not remove any observations on the basis of missing values. **Transformations???** \newline
+Upon plotting each predictor against its respective gene class, we noticed that there existed outliers for many predictor variables in the dataset. Most plots saw clusters of points in certain locations without much variability, but there was always at least one stray point in many of the plots that stood out and did not fit the general trend of the plot. We decided to remove the top 50 observations containing the greatest number of outliers, as well as extreme points that clearly stood out as unusual when examining the scatterplots for each predictor. \newline
 
-***MENTION HOW WE LOOK AT ANOVA AND SCATTERPLOTS IN TANDEM TO AVOID OVERRELIANCE ON ONLY ONE METHOD OF DETERMINING PREDICTORS***
-
-Once the data were cleaned and transformed, we selected our predictor variables of interest by first determining the significance of each predictor. We used an Analysis of Variance (ANOVA) approach to determine if there existed a significant difference amongst the predictors. While a vast majority of the predictors were statistically significant, we still had a large number of predictors since the dataset had over 90. To further refine our predictors to the most important ones, we visualized the correlation amongst our subset of predictors to see which variables exhibited high correlation. After refining our predictors to those that were both highly significant and largely uncorrelated were we able to begin fitting our models.\newline
+We simultaneously used an Analysis of Variance (ANOVA) approach to determine if there existed a significant difference amongst the predictors. By simultaneously using the ANOVA approach as well as visually examining the scatterplots, we were able to use multiple techniques to refine our predictors. This prevented us from relying too heavily on a single method and provided us more insigh into which predictors would be best. Because there were no unknown (`NA`) values in the dataset, we did not remove any observations on the basis of missing values. While a vast majority of the predictors were statistically significant, we still had a large number of predictors since the dataset had over 90. To further refine our predictors to the most important ones, we visualized the correlation amongst our subset of predictors to see which variables exhibited high correlation. After refining our predictors to those that were both highly significant and largely uncorrelated were we able to begin fitting our models.\newline
 
 ## Evaluation Metrics
 
@@ -30,9 +28,9 @@ We use 5-fold cross-validation to validate each of our models. After testing var
 
 
 Go into more detail about LDA
-  Centering/scaling
-  Parameters
-  Cross-validation
-  test/train split
-  Why LDA over the others?
+  - Centering/scaling
+  - Parameters
+  - Cross-validation
+  - test/train split
+  - Why LDA over the others?
 
