@@ -26,11 +26,13 @@ We simultaneously used an Analysis of Variance (ANOVA) approach to determine if 
 
 ## Evaluation Metrics
 
+### Linear Discriminant Analysis
+
 We ended up utilizing the Linear Discriminant Analysis (LDA) technique to predict the type of gene based on the other observations and predictors. We prefer this method due to its relatively low flexibility compared to its quadratic counterpart, as well as its reasonable, but not exorbitantly high, test prediction rate. We used a weighted test prediction rate by placing extra emphasis on correctly identifying oncogenes and tumor suppressor genes, genes that play the largest role in detecting cancer. We subsequently placed less weight on the neutral genes, since their relevance in cancer research was not high.\newline
 
 We use 5-fold cross-validation to validate each of our models. After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one.\newline 
 
-
+### Logistic Regression
 
 
 We selected a threshold of `r round(1/41, 3)` due to the distribution of the response variable in the training set shown in Table `r tbl <- tbl + 1; tbl`.
