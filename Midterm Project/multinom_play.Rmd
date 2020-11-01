@@ -99,32 +99,50 @@ classify <- function(probs) {
 library(dplyr)
 library(caret)
 set.seed(43)
-vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
-                             Missense_Entropy,
-                            N_Splice, LOF_TO_Total_Ratio, VEST_score,
-                            BioGRID_log_degree,
-                            Broad_H3K79me2_percentage, FamilyMemberCount,
-                            S50_score_replication_timing, Gene_expression_Z_score,
-                            Polyphen2, Broad_H3K36me3_percentage, class)
-vars_test <- createDataPartition(vars$class, p = 0.76, 
+# vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+#                              Missense_Entropy,
+#                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
+#                             BioGRID_log_degree,
+#                             Broad_H3K79me2_percentage, FamilyMemberCount,
+#                             S50_score_replication_timing, Gene_expression_Z_score,
+#                             Polyphen2, Broad_H3K36me3_percentage, class)
+
+vars_index <- createDataPartition(training$class, p = 0.76, 
                                   list = FALSE)
-vars_train <- vars[vars_test, ]
-vars_test <- vars[-vars_test, ]
+vars_train <- training[vars_index, ] #was formerly vars[vars_index,]...
+vars_test <- training[-vars_index, ]
 
 mn <- nnet::multinom(class ~ ., data = vars_train, model = TRUE)
 tidymn <- broom::tidy(mn) %>% arrange(p.value)
 terms <- tidymn$term[-(1:2)]
-terms <- unique(terms)
+terms_unique <- unique(terms)
+top_14 <- terms_unique[1:14]
+cat(top_14, sep = ",")
+```
 
-vars_mn <- training %>% select("VEST_score","BioGRID_log_degree",
-                               "Missense_Entropy",           
-                               "Broad_H3K9ac_percentage",      
-                               "N_LOF", "Broad_H3K36me3_percentage",   
-                               "pLOF_Zscore", "N_Splice", "LOF_TO_Total_Ratio",          
-                               "FamilyMemberCount", "Polyphen2", 
-                               "Broad_H3K79me2_percentage","Gene_expression_Z_score",      
-                               "S50_score_replication_timing"
-                               ) # these are just the predictors it liked
+
+```{r}
+#set.seed(9) gives 0.82
+#set.seed(2) gives 0.77
+#set.seed(12) 0.81
+#set.seed(3275) gives 0.76
+#set.seed(999) gives 0.77
+#set.seed(1235) gives 0.84
+#set.seed(712) gives 0.79
+#set.seed(100) gives 0.799
+#set.seed(200) gives 0.71
+set.seed(712)
+vars_mn <- training %>% select(
+  LOF_TO_Silent_Ratio,Splice_TO_Silent_Ratio,Missense_TO_Silent_Ratio,LOF_TO_Benign_Ratio,Splice_TO_Benign_Ratio,Missense_Damaging_TO_Benign_Ratio,Polyphen2,LOF_TO_Total_Ratio,Missense_TO_Total_Ratio,Splice_TO_Total_Ratio,LOF_TO_Missense_Ratio,Silent_fraction,Nonsense_fraction,Missense_fraction, class
+)
+
+vars_index <- createDataPartition(vars_mn$class, p = 0.76, 
+                                  list = FALSE)
+vars_train <- training[vars_index, ] # it's being overridden
+vars_test <- training[-vars_index, ]
+
+mn <- nnet::multinom(class ~ ., data = vars_train, model = TRUE)
+
 tests <- read.csv("test.csv")
 preds <- predict(mn, newdata = vars_test, type = "prob")
 predclass <- apply(preds, 1, classify)
@@ -135,6 +153,7 @@ test_preds <- predict(mn, newdata = tests, type = "prob")
 test_preds <- apply(test_preds, 1, classify)
 csv_file <- data.frame("id" = tests$id,
                        "class" = test_preds)
-write.csv(csv_file, "modelpredictions7_LOG.csv", row.names = FALSE)
+write.csv(csv_file, "modelpredictions7_REFINED_LOG.csv", row.names = FALSE)
 ```
+
 
