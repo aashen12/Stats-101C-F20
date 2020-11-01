@@ -123,10 +123,14 @@ score(tbl)
 tbl
 test_preds <- predict(mn, newdata = tests, type = "prob")
 test_preds <- apply(test_preds, 1, classify)
-csv_file <- data.frame("id" = tests$id,
-                       "class" = test_preds)
-#write.csv(csv_file, "modelpredictions7_REFINED_LOG.csv", row.names = FALSE)
 ```
 
 
+```{r}
+csv_file <- data.frame("id" = tests$id,
+                       "class" = test_preds)
+testfile <- read.csv("modelpredictions7_LOG.csv")
+all(testfile == csv_file) # double checking
+#write.csv(csv_file, "modelpredictions7_REFINED_LOG.csv", row.names = FALSE)
+```
 
