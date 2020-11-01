@@ -99,38 +99,19 @@ classify <- function(probs) {
 library(dplyr)
 library(boot)
 library(caret)
-# set.seed(43) was formerly the best seed for 0.78
-# vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
-#                              Missense_Entropy,
-#                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
-#                             BioGRID_log_degree,
-#                             Broad_H3K79me2_percentage, FamilyMemberCount,
-#                             S50_score_replication_timing, Gene_expression_Z_score,
-#                             Polyphen2, Broad_H3K36me3_percentage, class)
+set.seed(43)
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                             Missense_Entropy,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score,
+                            BioGRID_log_degree,
+                            Broad_H3K79me2_percentage, FamilyMemberCount,
+                            S50_score_replication_timing, Gene_expression_Z_score,
+                            Polyphen2, Broad_H3K36me3_percentage, class)
 
-vars_index <- createDataPartition(training$class, p = 0.8, 
+vars_index <- createDataPartition(vars$class, p = 0.76, 
                                   list = FALSE)
-vars_train <- training[vars_index, ] #was formerly vars[vars_index,]...
-vars_test <- training[-vars_index, ]
-
-mn <- nnet::multinom(class ~ ., data = vars_train, model = TRUE)
-tidymn <- broom::tidy(mn) %>% arrange(p.value)
-terms <- tidymn$term[-(1:2)]
-terms_unique <- unique(terms)
-top_14 <- terms_unique[1:14]
-cat(top_14, sep = ",")
-```
-
-
-```{r}
-vars_mn <- training %>% select(
-  LOF_TO_Silent_Ratio,Splice_TO_Silent_Ratio,Missense_TO_Silent_Ratio,LOF_TO_Benign_Ratio,Splice_TO_Benign_Ratio,Missense_Damaging_TO_Benign_Ratio,Polyphen2,LOF_TO_Total_Ratio,Missense_TO_Total_Ratio,Splice_TO_Total_Ratio,LOF_TO_Missense_Ratio,Silent_fraction,Nonsense_fraction,Missense_fraction, class
-)
-
-vars_index <- createDataPartition(vars_mn$class, p = 0.8, 
-                                  list = FALSE)
-vars_train <- vars_mn[vars_index, ] # it's being overridden
-vars_test <- vars_mn[-vars_index, ]
+vars_train <- vars[vars_index, ] # it's being overridden
+vars_test <- vars[-vars_index, ]
 
 mn <- nnet::multinom(class ~ ., data = vars_train, model = TRUE)
 
@@ -147,10 +128,5 @@ csv_file <- data.frame("id" = tests$id,
 #write.csv(csv_file, "modelpredictions7_REFINED_LOG.csv", row.names = FALSE)
 ```
 
-## Booting with `cv.glm`
-
-```{r}
-cv.glm(vars_mn, mn, K = 5)$delta[1]
-```
 
 
