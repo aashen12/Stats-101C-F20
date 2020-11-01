@@ -98,7 +98,7 @@ classify <- function(probs) {
 ```{r}
 library(dplyr)
 library(caret)
-set.seed(12)
+set.seed(43)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                              Missense_Entropy,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score,
@@ -131,5 +131,10 @@ predclass <- apply(preds, 1, classify)
 tbl <- table(predclass, vars_test$class)
 score(tbl)
 tbl
+test_preds <- predict(mn, newdata = tests, type = "prob")
+test_preds <- apply(test_preds, 1, classify)
+csv_file <- data.frame("id" = tests$id,
+                       "class" = test_preds)
+write.csv(csv_file, "modelpredictions7_LOG.csv", row.names = FALSE)
 ```
 
