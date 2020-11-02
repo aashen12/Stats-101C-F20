@@ -129,7 +129,9 @@ score(log_mod)
 
 ```{r}
 #Testing
-for(i in seq_len(20)){
+nits <- 20
+scores <- rep(NA, nits)
+for(i in seq_len(nits)){
 
 vars_index <- createDataPartition(vars$class, p = 0.76, list = FALSE)
 vars_train <- vars[vars_index, ] 
@@ -140,8 +142,9 @@ log_reg <- invisible(multinom(class ~ ., data = vars_train))
 log_preds <- predict(log_reg, newdata = vars_test, type = "probs")
 
 log_mod <- table("pred"=apply(log_preds, 1, classify), "obs" = vars_test$class)
-log_mod
-score(log_mod)
+#log_mod
+scores[i] <- score(log_mod)
 }
+scores
 ```
 
