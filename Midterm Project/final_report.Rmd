@@ -45,13 +45,15 @@ class_dist_train %>% kable(digits = 3, caption = caption)
 
 We utilized the LDA to predict the type of gene based on the other observations and predictors. We prefer this method due to its relatively low flexibility compared to its quadratic counterpart, as well as its reasonable, but not exorbitantly high, test prediction rate.
 
-After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. We use 5-fold cross-validation to validate each of our models. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one.\newline 
+After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. We use 5-fold cross-validation to validate each of our models. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one. 
 
 ### Logistic Regression
 
 We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate. We utilize the same threshold to ensure consistency across all models.
 
+In this method, we used the `nnet` package in R to fit a logistic regression model with the same set of predictors as we used in LDA. We also noticed that our weighted category score was consistently between 0.75-0.82, so after running the model multiple times with different seeds, we decided on a model that had a score of 0.77, which translated to a WCA of 0.74 on the test data. This model was fot using a 0.05 threshold, but we trained 76% of the training set instead of the standard 80%.
 
+**Talk about separate model using `broom` to organize `multinom` predictors by p-value?**
 
 **Discuss graphics, parameter specifics**
 
