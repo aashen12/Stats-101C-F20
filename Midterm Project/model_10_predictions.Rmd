@@ -5,7 +5,7 @@ date: "11/02/2020"
 output: pdf_document
 ---
 
-# CREATE YOUR OWNM COPY OF THE FILE IF YOU WANT TO CHANGE THINGS!!!!
+# CREATE YOUR OWN COPY OF THE FILE IF YOU WANT TO CHANGE THINGS!!!!
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
