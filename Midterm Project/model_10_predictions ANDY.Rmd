@@ -182,9 +182,9 @@ tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
 terms <- unique(tidymn$term)[-1]
 ```
 
-```{r}
+```{r,warning=FALSE}
 vars <- training %>% select(all_of(terms), class)
-set.seed(91232)
+set.seed(23678)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
@@ -214,19 +214,28 @@ for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
 }
 mean(as.numeric(unlist(thresh_list)))
 median(as.numeric(unlist(thresh_list)))
-set.seed(42)
-  vars_test <- createDataPartition(vars$class, p = 0.8, 
-                                    list = FALSE)
-  vars_train <- vars[vars_test, ]
-  vars_test <- vars[-vars_test, ]
-  train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
-  lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
-                  trControl = train_cont)
-    preds <- predict(lda_ft, newdata = vars_test, type = "prob")
- lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
-  lda_mod
-  score(lda_mod)
+#set.seed(42)
+vars_test <- createDataPartition(vars$class, p = 0.8, 
+                                  list = FALSE)
+vars_train <- vars[vars_test, ]
+vars_test <- vars[-vars_test, ]
+train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
+                trControl = train_cont)
+  preds <- predict(lda_ft, newdata = vars_test, type = "prob")
+lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
+lda_mod
+score(lda_mod)
 ```
+
+
+# Looking at Predictors
+
+```{r}
+all_of(terms)
+```
+
+
 
 ```{r}
 tests <- read.csv("test.csv")
