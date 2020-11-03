@@ -49,7 +49,7 @@ After testing various thresholds, predictor combinations, and training/test data
 
 ### Logistic Regression
 
-We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate.
+We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate. We utilize the same threshold to ensure consistency across all models.
 
 
 
