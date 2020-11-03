@@ -201,14 +201,14 @@ for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
   lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
                   trControl = train_cont)
   preds <- predict(lda_ft, newdata = vars_test, type = "prob")
-  scores <- numeric(101)
-  for (i in seq(from = 0, to = 0.1, by = 0.001)) {
+  scores <- numeric(100)
+  for (i in seq(from = 0.001, to = 0.1, by = 0.001)) {
     lda_mod <- table("pred"=apply(preds, 1, classify, k = i), "obs" = vars_test$class)
     lda_mod
     scores[i*1000] <- score(lda_mod)
   }
-  names(scores) <- seq(from = 0, to = 0.1, by = 0.001)
-  plot(scores, ylim = c(0.7, 0.9))
+  names(scores) <- seq(from = 0.001, to = 0.1, by = 0.001)
+  plot(scores ~ names(scores), ylim = c(0.7, 0.9),)
   best_thresh <- names(scores)[scores == max(scores)]
   max(scores)
   thresh_list[[j]] <- best_thresh
@@ -235,9 +235,9 @@ tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
 preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
-csv_file <- data.frame("id" = tests$id,
-                       "class" = preds)
-#write.csv(csv_file, "modelpredictions9.csv", row.names = FALSE)
+csv_file <- data.frame(id = tests$id,
+                       class = preds)
+write.csv(csv_file, "modelpredictions10.csv", row.names = FALSE)
 model_2_beta <- read.csv("modelpredictions2_beta.csv")
 table("BEST MOD" = model_2_beta$class, csv_file$class)
 ```

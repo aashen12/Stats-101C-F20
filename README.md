@@ -9,6 +9,8 @@ Instructor: Alan Vazquez
 
 Authors: Andy Shen, Ethan Allavarpu, Varan Nimar
 
-Current Best Model: secondary_investigation_UPDATED_ethan.Rmd
+Current Best Model: model_predictions_10.Rmd
+  - LDA fit, threshold of 0.01 for catching OG/TSG
+  - 32 predictor variables
 
-Linked Predictions: modelpredictions2_beta.csv
+Linked Predictions: modelpredictions10.csv
