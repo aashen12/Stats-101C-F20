@@ -28,7 +28,8 @@ We simultaneously used an Analysis of Variance (ANOVA) approach to determine if 
 
 In terms of evaluating our model, we selected a model using the Linear Discriminant Analysis (LDA) method as well as with Logistic Regression. In general, we prefer these parametric techniques since they are generally less variable than non-parametric techniques. These two methods also produced sufficiently high scores with the test data, but the scores did not appear to be excessively high to the point where we believed we were over-fitting the data. For both LDA and Logistic Regression, we ran our model numerous times with different seeds and submitted the model which had a weighted categorization accuracy that was closest to around 0.78, in order to avoid submitting an inaccurate or over-fitted model. 
 
-We selected a threshold of `r round(1/41, 3)` due to the distribution of the response variable in the training set shown in Table `r tbl <- tbl + 1; tbl`.
+We selected a threshold of `r round(1/41, 3)` due to the distribution of the response variable in the training set shown in Table `r tbl <- tbl + 1; tbl`. We used a weighted test prediction rate by placing extra emphasis on correctly identifying oncogenes and tumor suppressor genes, genes that play the largest role in detecting cancer. Less weight is placed on the neutral genes, since their relevance in cancer research was not high.
+
 
 ```{r}
 class_dist_train <- data.frame(
@@ -42,14 +43,13 @@ class_dist_train %>% kable(digits = 3, caption = caption)
 
 ### Linear Discriminant Analysis
 
-We utilized the LDA to predict the type of gene based on the other observations and predictors. We prefer this method due to its relatively low flexibility compared to its quadratic counterpart, as well as its reasonable, but not exorbitantly high, test prediction rate. We used a weighted test prediction rate by placing extra emphasis on correctly identifying oncogenes and tumor suppressor genes, genes that play the largest role in detecting cancer. We subsequently placed less weight on the neutral genes, since their relevance in cancer research was not high.\newline
+We utilized the LDA to predict the type of gene based on the other observations and predictors. We prefer this method due to its relatively low flexibility compared to its quadratic counterpart, as well as its reasonable, but not exorbitantly high, test prediction rate.
 
-We use 5-fold cross-validation to validate each of our models. After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one.\newline 
+After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. We use 5-fold cross-validation to validate each of our models. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one.\newline 
 
 ### Logistic Regression
 
-
-
+We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate.
 
 
 
