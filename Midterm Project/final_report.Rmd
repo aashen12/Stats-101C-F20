@@ -20,9 +20,9 @@ fig <- 0
 
 The purpose of this analysis is to identify certain genes that play a role in cancer. We apply statistical learning techniques to a dataset of genes and a large number of mutation-related, genomic, phenotype, and epigenetic features; with the goal of identifying oncogenes (OGs), tumor suppressor genes (TSGs), and neutral genes (NGs), ultimately aiding future research into cancer prevention, diagnosis, and treatment.\newline
 
-Upon plotting each predictor against its respective gene class, we noticed that there existed outliers for many predictor variables in the dataset. Most plots saw clusters of points in certain locations without much variability, but there was always at least one stray point in many of the plots that stood out and did not fit the general trend of the plot. We decided to remove the top 50 observations containing the greatest number of outliers, as well as extreme points that clearly stood out as unusual when examining the scatterplots for each predictor. \newline
+Upon plotting each predictor against its respective gene class, we noticed that there existed outliers for many predictor variables in the dataset. Most plots saw clusters of points in certain locations without much variability, but there was always at least one stray point in many of the plots that stood out and did not fit the general trend of the plot. **We decided to remove the top 50 observations containing the greatest number of outliers, as well as extreme points that clearly stood out as unusual when examining the scatterplots for each predictor.** We also remove all rows with more than 50 predictors recorded as 0 in case these metrics might have been recorded as missing or unknown. This will hopefully reduce variability and allow predictions to be more accurate. \newline
 
-We simultaneously used an Analysis of Variance (ANOVA) approach to determine if there existed a significant difference amongst the predictors. By simultaneously using the ANOVA approach as well as visually examining the scatterplots, we were able to use multiple techniques to refine our predictors. This prevented us from relying too heavily on a single method and provided us more insigh into which predictors would be best. Because there were no unknown (`NA`) values in the dataset, we did not remove any observations on the basis of missing values. While a vast majority of the predictors were statistically significant, we still had a large number of predictors since the dataset had over 90. To further refine our predictors to the most important ones, we visualized the correlation amongst our subset of predictors to see which variables exhibited high correlation. After refining our predictors to those that were both highly significant and largely uncorrelated were we able to begin fitting our models.\newline
+We simultaneously used an Analysis of Variance (ANOVA) approach to determine if there existed a significant difference among the predictors. By simultaneously using the ANOVA approach as well as visually examining the scatterplots, we were able to use multiple techniques to refine our predictors. This prevented us from relying too heavily on a single method and provided us more insight into which predictors would be best. Because there were no unknown (`NA`) values in the dataset, we did not remove any observations on the basis of missing values. While a vast majority of the predictors were statistically significant, we still had a large number of predictors since the dataset had over 90. To further refine our predictors to the most important ones, we visualized the correlation amongst our subset of predictors to see which variables exhibited high correlation. After refining our predictors to those that were both highly significant and largely uncorrelated were we able to begin fitting our models.\newline
 
 ## Evaluation Metrics
 
@@ -47,15 +47,21 @@ We utilized the LDA to predict the type of gene based on the other observations 
 
 After testing various thresholds, predictor combinations, and training/test data sets, LDA proved to be the most consistent when it came to the weighted test error rate. Other techniques, such as Quadratic Discriminant Analysis (QDA) and K-Nearest Neighbors (KNN), saw test error rates that fluctuated when the training and test data were changed. We use 5-fold cross-validation to validate each of our models. Moreover, the sporadically low test error rates seen in QDA and KNN indicate overfitting of the data, while the sporadically high test error rates indicate a poor model fit. Both the consistency of the the LDA technique and the inconsistency of the more flexible techniques led us to conclude that the relationship of the data is likely a linear one. 
 
+**Mention Candidate LDA models and which ones were the best. Ask Ethan.**
+
 ### Logistic Regression
 
 We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate. We utilize the same threshold to ensure consistency across all models.
 
-In this method, we used the `nnet` package in R to fit a logistic regression model with the same set of predictors as we used in LDA. We also noticed that our weighted category score was consistently between 0.75-0.82, so after running the model multiple times with different seeds, we decided on a model that had a score of 0.77, which translated to a WCA of 0.74 on the test data. This model was fot using a 0.05 threshold, but we trained 76% of the training set instead of the standard 80%.
+In this method, we used the `nnet` package in R to fit a logistic regression model with the same set of predictors as we used in LDA. We also noticed that our weighted category score was consistently between 0.75-0.82, so after running the model multiple times with different seeds, we decided on a model that had a score of 0.77, which translated to a WCA of 0.74 on the test data. This model was fit using a 0.05 threshold, but we trained 76% of the training set instead of the standard 80%.
 
 **Talk about separate model using `broom` to organize `multinom` predictors by p-value?**
 
-**Discuss graphics, parameter specifics**
+**Mention Candidate Logistic models and which ones were the best. Ask Ethan.**
+
+### Measuring Error
+
+**Discuss graphics, parameter specifics, for both models**
 
 ## Appendix
 
