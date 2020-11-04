@@ -258,7 +258,7 @@ for (i in 2:10) {
         col = rgb(red, green, blue, alpha = 0.5))
   
 }
-
+abline(v = c(0.005, 0.01))
 # Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak)
 set.seed(03)
   vars_test <- createDataPartition(vars$class, p = 0.8, 

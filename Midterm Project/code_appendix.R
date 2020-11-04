@@ -1,20 +1,8 @@
----
-title: "Preliminary Investigation"
-author: 'Ethan Allavarpu (UID: 405287603)'
-date: "10/27/2020"
-output: pdf_document
----
+# Code Appendix
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, comment = NA)
-```
-
-```{r}
-set.seed(110920)
-# sample <- read.csv("sample.csv", stringsAsFactors = TRUE)
-# sample
-```
-```{r, fig.height=8, fig.width=8}
+# Step 1: Look at variables and models holistically, see what stands out
+## Predictors: Look for correlation, outliers
+## Classification: See best WCA performers, least variable
 training <- read.csv("training.csv", stringsAsFactors = TRUE)
 sort(abs(cor(training)["class", ]), decreasing = TRUE)[2:19]
 training$class <- factor(training$class)
@@ -37,11 +25,6 @@ grid.arrange(grobs = scat_plot[21:40], ncol = 4)
 grid.arrange(grobs = scat_plot[41:60], ncol = 4)
 grid.arrange(grobs = scat_plot[61:80], ncol = 4)
 grid.arrange(grobs = scat_plot[81:98], ncol = 4)
-```
-```{r}
-
-```
-```{r, fig.height=10, fig.width=8}
 library(ggplot2)
 scatter <- function(var) {
   ggplot(training, aes_string(var, "class")) +
@@ -55,10 +38,6 @@ grid.arrange(grobs = scat_plot[21:40], ncol = 4)
 grid.arrange(grobs = scat_plot[41:60], ncol = 4)
 grid.arrange(grobs = scat_plot[61:80], ncol = 4)
 grid.arrange(grobs = scat_plot[81:98], ncol = 4)
-```
-
-
-```{r}
 sig <- logical(98)
 names(sig) <- names(training)[-99]
 k <- 1
@@ -80,16 +59,13 @@ classify <- function(probs) {
     subset <- probs[2:3]
     output <- which(subset == max(subset))
     if (length(output) > 1) {
-        output <- sample(1:2, 1)
+      output <- sample(1:2, 1)
     }
   } else {
     output <- 0
   }
   output
 }
-```
-
-```{r, fig.height = 7, fig.width = 7}
 library(dplyr)
 vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                             N_Splice, LOF_TO_Total_Ratio, VEST_score, BioGRID_log_degree, Broad_H3K79me2_percentage,
@@ -97,21 +73,20 @@ vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
                             Polyphen2, Broad_H3K36me3_percentage, class)
 vars$class <- factor(vars$class)
 levels(vars$class) <- c("NG", "OG", "TSG")
-cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
+
+# Visual display of correlation matrix for predictors
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
 library(reshape2)
-#reshape it
 melted_cor_mtx <- melt(cor_mtx)
-
-#draw the heatmap
-cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
-cor_heatmap = cor_heatmap +
-scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
-theme_minimal() +
-theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
-
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 cor_heatmap
-```
-```{r}
+
+# Run various fitted models to see which perform best with respect to variability and WCA
 scores_mat <- matrix(nrow = 10, ncol = 3)
 k <- 1
 set.seed(11092020)
@@ -123,7 +98,7 @@ for (i in runif(10, min = 1, max = 10^7)) {
                               Polyphen2, Broad_H3K36me3_percentage, class)
   library(caret)
   vars_test <- createDataPartition(vars$class, p = 0.7, 
-                                    list = FALSE)
+                                   list = FALSE)
   vars_train <- vars[vars_test, ]
   vars_test <- vars[-vars_test, ]
   
@@ -155,15 +130,3 @@ colnames(scores_mat) <- c("KNN", "QDA", "LDA")
 data.frame(scores_mat)
 apply(scores_mat, 2, mean)
 apply(scores_mat, 2, sd)
-```
-
-```{r}
-tests <- read.csv("test.csv")
-preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify)
-names(preds) <- tests$id
-csv_file <- data.frame("id" = tests$id,
-                       "class" = preds)
-# write.csv(csv_file, "modelpredictions.csv", row.names = FALSE)
-```
-
