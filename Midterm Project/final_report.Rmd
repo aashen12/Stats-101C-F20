@@ -51,6 +51,8 @@ After testing various thresholds, predictor combinations, and training/test data
 
 ### Logistic Regression
 
+**We might omit this**
+
 We also noticed that implementing a logistic regression model proved to have a relatively high weighted score, making it a viable technique to investigate. We utilize the same threshold to ensure consistency across all models.
 
 In this method, we used the `nnet` package in R to fit a logistic regression model with the same set of predictors as we used in LDA. We also noticed that our weighted category score was consistently between 0.75-0.82, so after running the model multiple times with different seeds, we decided on a model that had a score of 0.77, which translated to a WCA of 0.74 on the test data. This model was fit using a 0.05 threshold, but we trained 76% of the training set instead of the standard 80%.
