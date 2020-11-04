@@ -1,5 +1,5 @@
 ---
-title: "Model 12 Predictions"
+title: "Model 2 Revisited Predictions"
 author: 'Ethan Allavarpu (UID: 405287603)'
 date: "11/02/2020"
 output: pdf_document
@@ -16,7 +16,6 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA)
 training <- read.csv("training.csv", stringsAsFactors = TRUE)
 training$class <- factor(training$class)
 levels(training$class) <- c("NG", "OG", "TSG")
-# Create an outlier function
 outlier <- function(data) {
   low <- mean(data) - 3 * sd(data)
   high <- mean(data) + 3 * sd(data)
@@ -35,12 +34,9 @@ outlier <- function(data) {
 # grid.arrange(grobs = scat_plot[41:60], ncol = 4)
 # grid.arrange(grobs = scat_plot[61:80], ncol = 4)
 # grid.arrange(grobs = scat_plot[81:98], ncol = 4)
-outliers <- table(unlist(lapply(training[,-99], outlier)))
-outlier_index <- sort(outliers, decreasing = TRUE)
-# Remove 50 most common outliers (i.e. outliers across multiple predictors)
+outlier_index <- sort(table(unlist(lapply(training[,-99], outlier))), decreasing = TRUE)
+outlier_index[1:100]
 training <- training[-as.numeric(names(outlier_index)[1:50]),]
-
-# The below variables had outstanding outliers which we chose to remove
 sort(training$Missense_TO_Silent_Ratio, decreasing = TRUE)[1:10]
 training <- training[-which(training$Missense_TO_Silent_Ratio > 100), ]
 sort(training$Missense_KB_Ratio, decreasing = TRUE)[1:10]
@@ -59,7 +55,6 @@ sort(training$Synonymous_Zscore, decreasing = FALSE)[1:10]
 training <- training[-which(training$Synonymous_Zscore < -15), ]
 numeric_training <- training[,-99]
 
-# Lots of zeroes for some observations, so removed those observations with quite a few zeroes across predictor variables
 n_zeroes <- rep(NA, nrow(numeric_training))
 
 for(i in seq_len(nrow(numeric_training))){
@@ -210,12 +205,19 @@ terms
 ```
 
 ```{r}
-vars <- training %>% select(all_of(terms), class)
+set.seed(1234)
+library(dplyr)
+vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
+                             Missense_Entropy,
+                            N_Splice, LOF_TO_Total_Ratio, VEST_score,
+                            BioGRID_log_degree,
+                            Broad_H3K79me2_percentage, FamilyMemberCount,
+                            S50_score_replication_timing, Gene_expression_Z_score,
+                            Polyphen2, Broad_H3K36me3_percentage, class)
 set.seed(91232)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
-# for() loop to validate post cross-validation with WCA and varying thresholds
 for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
   set.seed(rand)
   vars_test <- createDataPartition(vars$class, p = 0.8, 
@@ -233,34 +235,16 @@ for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
     lda_mod
     scores[i*1000] <- score(lda_mod)
   }
-  thresh_list[[j]] <- scores
+  names(scores) <- seq(from = 0.001, to = 0.1, by = 0.001)
+  plot(scores ~ names(scores), ylim = c(0.7, 0.9),)
+  best_thresh <- names(scores)[scores == max(scores)]
+  max(scores)
+  thresh_list[[j]] <- best_thresh
   j <- j + 1
 }
-
-# Plot WCA as a function of threshold for various seeds to see best threshold
-
-plot(thresh_list[[1]] ~ seq(from = 0.001, to = 0.1, by = 0.001),
-     type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5))
-for (i in 2:10) {
-  red <- 0
-  green <- 0
-  blue <- 0
-  if (i %% 4 == 1) {
-    red <- 0.5
-  }
-  if (i %% 4 == 2) {
-    green <- 0.5
-  }
-  if (i %% 4 == 3) {
-    blue <- 0.5
-  }
-  lines(seq(from = 0.001, to = 0.1, by = 0.001), thresh_list[[i]],
-        col = rgb(red, green, blue, alpha = 0.5))
-  
-}
-
-# Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak)
-set.seed(03)
+mean(as.numeric(unlist(thresh_list)))
+median(as.numeric(unlist(thresh_list)))
+set.seed(123)
   vars_test <- createDataPartition(vars$class, p = 0.8, 
                                     list = FALSE)
   vars_train <- vars[vars_test, ]
@@ -269,20 +253,19 @@ set.seed(03)
   lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
                   trControl = train_cont)
     preds <- predict(lda_ft, newdata = vars_test, type = "prob")
- lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
+ lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.02), "obs" = vars_test$class)
   lda_mod
   score(lda_mod)
 ```
 
 ```{r}
-# Write prediction model on test data
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
 preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-#write.csv(csv_file, "modelpredictions12.csv", row.names = FALSE)
-model_10 <- read.csv("modelpredictions12.csv")
-table("BEST MOD" = model_10$class, csv_file$class)
+write.csv(csv_file, "modelpredictions2_revisited.csv", row.names = FALSE)
+model_12 <- read.csv("modelpredictions12.csv")
+table("BEST MOD" = model_12$class, csv_file$class)
 ```

@@ -1,5 +1,5 @@
 ---
-title: "Model 12 Predictions"
+title: "Model 13 Predictions"
 author: 'Ethan Allavarpu (UID: 405287603)'
 date: "11/02/2020"
 output: pdf_document
@@ -71,7 +71,7 @@ for(i in seq_len(nrow(numeric_training))){
   }
   n_zeroes[i] <- row_i_zeroes
 }
-training <- training[n_zeroes <= 50, ]
+training <- training[n_zeroes <= ncol(training) / 2, ]
 # Remove 1 of 2 variables that have r value of 1 or -1 (i.e. perfectly correlated)
 perf_corr <- which(abs(cor(training[,-99])) == 1, arr.ind = TRUE)
 which(perf_corr[,1] != perf_corr[,2])
