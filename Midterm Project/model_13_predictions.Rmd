@@ -152,55 +152,51 @@ term_mat <- cor(training %>% select(all_of(final_terms)))
 ind_terms <- final_terms[-c(1, 3, 4, 5, 10, 11, 13, 14, 15, 17)]
 
 vars <- training
-cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
 library(reshape2)
-#reshape it
 melted_cor_mtx <- melt(cor_mtx)
-
-#draw the heatmap
-cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
-cor_heatmap = cor_heatmap +
-scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
-theme_minimal() +
-theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
-
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 cor_heatmap
+
 which(abs(cor_mtx) > 0.75, arr.ind = TRUE)
 # Eliminate all but one of a set of variables highly correlated with one another
 vars <- vars[, -c(1, 4, 32, 13, 18, 21, 29, 14, 20, 15, 30,
                   15, 24, 31, 38, 34, 41, 48, 50, 68, 86, 88,
                   71, 72, 78, 74, 76, 80, 82, 83, 92, 94, 95)]
-cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
 library(reshape2)
-#reshape it
 melted_cor_mtx <- melt(cor_mtx)
-
-#draw the heatmap
-cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
-cor_heatmap = cor_heatmap +
-scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
-theme_minimal() +
-theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
-
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 cor_heatmap
+
+
 which(abs(cor_mtx) > 0.6, arr.ind = TRUE)
 # Eliminate all but one of a set of variables highly correlated with one another
 vars <- vars[, -c(4, 5, 15, 17, 11, 13, 14, 29, 39, 47,
                   48, 51, 49, 54, 55, 52, 58, 63, 65,
                   34, 64, 53)]
-cor_mtx = round(cor(vars[, names(vars) != "class"]), 2)
+
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
 library(reshape2)
-#reshape it
 melted_cor_mtx <- melt(cor_mtx)
-
-#draw the heatmap
-cor_heatmap = ggplot(data = melted_cor_mtx, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
-cor_heatmap = cor_heatmap +
-scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") + 
-theme_minimal() +
-theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
-
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
 cor_heatmap
+
 set.seed(12)
 mn <- nnet::multinom(class ~ ., data = vars, model = TRUE)
 tidymn <- broom::tidy(mn) %>% arrange(p.value)
@@ -211,17 +207,16 @@ terms
 
 ```{r}
 vars <- training %>% select(all_of(terms), class)
-set.seed(91232)
+set.seed(54321)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
 # for() loop to validate post cross-validation with WCA and varying thresholds
 for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
   set.seed(rand)
-  vars_test <- createDataPartition(vars$class, p = 0.8, 
-                                    list = FALSE)
-  vars_train <- vars[vars_test, ]
-  vars_test <- vars[-vars_test, ]
+  vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
+  vars_train <- vars[vars_split, ]
+  vars_test <- vars[-vars_split, ]
   
   train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
   lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
@@ -238,51 +233,58 @@ for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
 }
 
 # Plot WCA as a function of threshold for various seeds to see best threshold
-
+thresh_vals <- c(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1)
 plot(thresh_list[[1]] ~ seq(from = 0.001, to = 0.1, by = 0.001),
-     type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5))
+     type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5),
+     xaxt = "n", ylab = "WCA Percentage",
+     xlab = "Threshold for Choosing Between (0) and (1 and 2)")
 for (i in 2:10) {
   red <- 0
   green <- 0
   blue <- 0
-  if (i %% 4 == 1) {
-    red <- 0.5
-  }
-  if (i %% 4 == 2) {
-    green <- 0.5
-  }
-  if (i %% 4 == 3) {
-    blue <- 0.5
-  }
+  if (i %% 4 == 1) {red <- 0.5}
+  if (i %% 4 == 2) {green <- 0.5}
+  if (i %% 4 == 3) {blue <- 0.5}
   lines(seq(from = 0.001, to = 0.1, by = 0.001), thresh_list[[i]],
         col = rgb(red, green, blue, alpha = 0.5))
   
 }
-
-# Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak)
-set.seed(03)
-  vars_test <- createDataPartition(vars$class, p = 0.8, 
-                                    list = FALSE)
-  vars_train <- vars[vars_test, ]
-  vars_test <- vars[-vars_test, ]
-  train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
-  lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
-                  trControl = train_cont)
-    preds <- predict(lda_ft, newdata = vars_test, type = "prob")
- lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
-  lda_mod
-  score(lda_mod)
+abline(v = thresh_vals, col = rgb(0, 0, 0, alpha = 0.5))
+axis(side = 1, at = thresh_vals, cex.axis = 0.75, las = 2)
+best_thresh <- unlist(lapply(thresh_list, which.max))
+median(best_thresh * 0.001)
+thresh_val_scores <- matrix(nrow = 10, ncol = length(thresh_vals))
+colnames(thresh_val_scores) <- thresh_vals
+for (i in 1:10) {
+  thresh_val_scores[i, ] <- thresh_list[[i]][thresh_vals * 1000]
+}
+apply(thresh_val_scores, 2, mean)
+# Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
+set.seed(1245)
+vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
+vars_train <- vars[vars_split, ]
+vars_test <- vars[-vars_split, ]
+train_cont <- trainControl(method = "cv", number = 5,
+                           classProbs = TRUE, savePredictions = TRUE)
+lda_ft <- train(class ~ ., data = vars_train, method = "lda",
+                preProc = c("center", "scale"), trControl = train_cont)
+preds <- predict(lda_ft, newdata = vars_test, type = "prob")
+lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.005),
+                 "obs" = vars_test$class)
+lda_mod
+score(lda_mod)
 ```
 
 ```{r}
 # Write prediction model on test data
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify, k = 0.01)
+preds <- apply(preds, 1, classify, k = 0.005)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
 #write.csv(csv_file, "modelpredictions12.csv", row.names = FALSE)
 model_10 <- read.csv("modelpredictions12.csv")
 table("BEST MOD" = model_10$class, csv_file$class)
+mean(model_10$class == csv_file$class)
 ```
