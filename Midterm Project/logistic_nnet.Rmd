@@ -118,7 +118,7 @@ vars_test <- vars[-vars_index, ]
 Note to double check variables for multicollinearity-- I'll stick with these for now.
 
 ```{r}
-log_reg <- multinom(class ~ ., data = vars_train) 
+log_reg <- nnet::multinom(class ~ ., data = vars_train) 
 
 log_preds <- predict(log_reg, newdata = vars_test, type = "probs")
 
@@ -137,7 +137,7 @@ vars_index <- createDataPartition(vars$class, p = 0.76, list = FALSE)
 vars_train <- vars[vars_index, ] 
 vars_test <- vars[-vars_index, ]
 
-log_reg <- invisible(multinom(class ~ ., data = vars_train)) 
+log_reg <- invisible(nnet::multinom(class ~ ., data = vars_train)) 
 
 log_preds <- predict(log_reg, newdata = vars_test, type = "probs")
 
