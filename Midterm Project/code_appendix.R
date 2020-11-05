@@ -130,3 +130,5 @@ colnames(scores_mat) <- c("KNN", "QDA", "LDA")
 data.frame(scores_mat)
 apply(scores_mat, 2, mean)
 apply(scores_mat, 2, sd)
+
+## Step 2: Consider removing observations and correlated predictors before 
