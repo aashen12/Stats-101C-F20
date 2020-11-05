@@ -207,7 +207,7 @@ terms
 
 ```{r}
 vars <- training %>% select(all_of(terms), class)
-set.seed(1234567890)
+set.seed(217)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
@@ -262,7 +262,7 @@ for (i in 1:10) {
 }
 apply(thresh_val_scores, 2, mean)
 # Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
-set.seed(125)
+set.seed(1248)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
 vars_test <- vars[-vars_split, ]
@@ -285,8 +285,8 @@ preds <- apply(preds, 1, classify, k = 0.005)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-#write.csv(csv_file, "modelpredictions12.csv", row.names = FALSE)
-model_10 <- read.csv("modelpredictions12.csv")
-table("BEST MOD" = model_10$class, csv_file$class)
-mean(model_10$class == csv_file$class)
+# write.csv(csv_file, "modelpredictions13.csv", row.names = FALSE)
+best_mod <- read.csv("modelpredictions12.csv")
+table("Best Model" = best_mod$class, csv_file$class)
+mean(best_mod$class == csv_file$class)
 ```
