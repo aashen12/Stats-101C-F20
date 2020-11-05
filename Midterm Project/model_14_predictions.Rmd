@@ -176,22 +176,22 @@ cor_heatmap <- cor_heatmap +
 cor_heatmap
 
 
-which(abs(cor_mtx) > 0.6, arr.ind = TRUE)
-# Eliminate all but one of a set of variables highly correlated with one another
-vars <- vars[, -c(4, 5, 15, 17, 11, 13, 14, 29, 39, 47,
-                  48, 50, 51, 49, 54, 55, 52, 58, 63, 65,
-                  34, 64, 53)]
-
-cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
-library(reshape2)
-melted_cor_mtx <- melt(cor_mtx)
-cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
-cor_heatmap <- cor_heatmap +
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
-                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
-cor_heatmap
+# which(abs(cor_mtx) > 0.6, arr.ind = TRUE)
+# # Eliminate all but one of a set of variables highly correlated with one another
+# vars <- vars[, -c(4, 5, 15, 17, 11, 13, 14, 29, 39, 47,
+#                   48, 50, 51, 49, 54, 55, 52, 58, 63, 65,
+#                   34, 64, 53)]
+# 
+# cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
+# library(reshape2)
+# melted_cor_mtx <- melt(cor_mtx)
+# cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+# cor_heatmap <- cor_heatmap +
+#   scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+#                        midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
+# cor_heatmap
 ```
 ```{r}
 set.seed(12)
@@ -215,12 +215,8 @@ cor_heatmap
 ```
 
 ```{r}
-terms <- terms[terms != "Gene_body_hypermethylation_in_cancer"]
-terms <- terms[terms != "BioGRID_betweenness"]
-terms <- terms[terms != "CNA_deletion"]
-terms <- terms[terms != "Super_Enhancer_percentage"]
 vars <- training %>% select(all_of(terms), class)
-set.seed(217)
+set.seed(89)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
@@ -275,7 +271,7 @@ for (i in 1:10) {
 }
 apply(thresh_val_scores, 2, mean)
 # Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
-set.seed(1245)
+set.seed(4)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
 vars_test <- vars[-vars_split, ]
@@ -298,7 +294,7 @@ preds <- apply(preds, 1, classify, k = 0.005)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions13.csv", row.names = FALSE)
+write.csv(csv_file, "modelpredictions14.csv", row.names = FALSE)
 best_mod <- read.csv("modelpredictions13.csv")
 table("Best Model" = best_mod$class, csv_file$class)
 mean(best_mod$class == csv_file$class)
