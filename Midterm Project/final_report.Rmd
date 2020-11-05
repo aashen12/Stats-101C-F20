@@ -1,5 +1,5 @@
 ---
-title: "Midterm Project - Perfectly Imperfect Models"
+title: "Midterm Project - Gould Rush"
 subtitle: "Stats 101C Lecture 3"
 author: "Andy Shen, Ethan Allavarpu, Varan Nimar"
 date: "Fall 2020"
@@ -52,6 +52,8 @@ To select a threshold, we calculated the weighted categorization accuracy using 
 Our candidate model's WCA for the training data was `r round(0.78242421, 3)`, which resulted in a WCA of `r round(0.82298, 3)` on the public leader board. We selected a threshold of **ASK ETHAN**...
 
 **Mention Candidate LDA models and which ones were the best. Ask Ethan.**
+
+**Spend good amount of time describing why our model works/doesn't work--should be focus of report**
 
 **Talk about separate model using `broom` to organize `multinom` predictors by p-value?**
 

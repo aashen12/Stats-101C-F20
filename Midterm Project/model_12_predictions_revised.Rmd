@@ -127,7 +127,7 @@ library(caret)
 set.seed(12)
 mn <- nnet::multinom(class ~ ., data = training, model = TRUE)
 tidymn <- broom::tidy(mn) %>% arrange(p.value)
-tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
+tidymn <- tidymn %>% filter(p.value < 0.05 / ncol(tidymn))
 terms <- unique(tidymn$term)[-1]
 library(dplyr)
 sig <- logical(97)
@@ -204,7 +204,7 @@ cor_heatmap
 set.seed(12)
 mn <- nnet::multinom(class ~ ., data = vars, model = TRUE)
 tidymn <- broom::tidy(mn) %>% arrange(p.value)
-tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
+tidymn <- tidymn %>% filter(p.value < 0.05 / ncol(tidymn))
 terms <- unique(tidymn$term)[-1]
 terms
 ```
