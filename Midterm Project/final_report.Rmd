@@ -49,7 +49,7 @@ The predictors for our first candidate model (model 12) were selected by examini
 
 To select a threshold, we calculated the weighted categorization accuracy using 5-fold cross-validation across arbitrarily set seeds and selected the model with the WCA closest to 0.78. Our training data was divided using an 80%/20% training/test split. The threshold with the most consistent performance across all seeds was **ASK ETHAN**. 
 
-Our candidate model's WCA for the training data was `round(0.78242421, 3)`, which resulted in a WCA of `r round(0.82298, 3)` on the public leader board. We selected a threshold of **ASK ETHAN**...
+Our candidate model's WCA for the training data was `r round(0.78242421, 3)`, which resulted in a WCA of `r round(0.82298, 3)` on the public leader board. We selected a threshold of **ASK ETHAN**...
 
 **Mention Candidate LDA models and which ones were the best. Ask Ethan.**
 
