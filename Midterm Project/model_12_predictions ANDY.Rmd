@@ -259,7 +259,7 @@ preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions12.csv", row.names = FALSE)
+#write.csv(csv_file, "modelpredictions12.csv", row.names = FALSE)
 model_10 <- read.csv("modelpredictions10.csv")
 table("BEST MOD" = model_10$class, csv_file$class)
 ```
