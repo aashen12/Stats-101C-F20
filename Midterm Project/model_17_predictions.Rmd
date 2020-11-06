@@ -1,5 +1,5 @@
 ---
-title: "Model 13 Predictions"
+title: "Model 17 Predictions"
 author: 'Ethan Allavarpu (UID: 405287603)'
 date: "11/02/2020"
 output: pdf_document
@@ -71,7 +71,6 @@ for(i in seq_len(nrow(numeric_training))){
   }
   n_zeroes[i] <- row_i_zeroes
 }
-training <- training[n_zeroes <= ncol(training) / 2, ]
 # Remove 1 of 2 variables that have r value of 1 or -1 (i.e. perfectly correlated)
 perf_corr <- which(abs(cor(training[,-99])) == 1, arr.ind = TRUE)
 which(perf_corr[,1] != perf_corr[,2])
@@ -279,7 +278,7 @@ for (i in 1:10) {
 }
 apply(thresh_val_scores, 2, mean)
 # Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
-set.seed(1248)
+set.seed(12)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
 vars_test <- vars[-vars_split, ]
@@ -302,7 +301,7 @@ preds <- apply(preds, 1, classify, k = 0.005)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions13.csv", row.names = FALSE)
+# write.csv(csv_file, "modelpredictions17.csv", row.names = FALSE)
 best_mod <- read.csv("modelpredictions13.csv")
 table("Best Model" = best_mod$class, csv_file$class)
 mean(best_mod$class == csv_file$class)
