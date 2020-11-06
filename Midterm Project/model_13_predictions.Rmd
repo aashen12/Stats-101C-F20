@@ -224,7 +224,7 @@ terms
 
 ```{r}
 vars <- training %>% select(all_of(terms), class)
-set.seed(217)
+set.seed(100)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
@@ -254,6 +254,7 @@ thresh_vals <- c(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1)
 plot(thresh_list[[1]] ~ seq(from = 0.001, to = 0.1, by = 0.001),
      type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5),
      xaxt = "n", ylab = "WCA Percentage",
+     main = "WCA vs. Threshold for Different Seeds",
      xlab = "Threshold for Choosing Between (0) and (1 and 2)")
 for (i in 2:10) {
   red <- 0
