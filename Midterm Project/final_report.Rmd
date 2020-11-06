@@ -60,10 +60,10 @@ The reasoning for selecting LDA as our two model selections is clear, however we
 
 ### Measuring Error
 
-**Discuss graphics for both models. Ethan include graphics**
+Figure 1 below shows how the WCA varies with increasing threshold for both candidate LDA models. This measurement greatly aided our selection of a candidate model.
 
-## Appendix
+![Figure 1: Error Plot](threshold_plot.jpg)
 
-## Statement of Contributions
+
 
 
