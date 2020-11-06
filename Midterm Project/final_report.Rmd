@@ -1,5 +1,5 @@
 ---
-title: "Midterm Project - Perfectly Imperfect Models"
+title: "Midterm Project - Gould Rush"
 subtitle: "Stats 101C Lecture 3"
 author: "Andy Shen, Ethan Allavarpu, Varan Nimar"
 date: "Fall 2020"
