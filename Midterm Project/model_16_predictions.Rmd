@@ -1,5 +1,5 @@
 ---
-title: "Model 15 Predictions"
+title: "Model 16 Predictions"
 author: 'Ethan Allavarpu (UID: 405287603)'
 date: "11/02/2020"
 output: pdf_document
@@ -262,7 +262,7 @@ for (i in 1:10) {
 }
 apply(thresh_val_scores, 2, mean)
 # Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
-set.seed(1248)
+set.seed(1234567)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
 vars_test <- vars[-vars_split, ]
@@ -271,7 +271,7 @@ train_cont <- trainControl(method = "cv", number = 5,
 lda_ft <- train(class ~ ., data = vars_train, method = "lda",
                 preProc = c("center", "scale"), trControl = train_cont)
 preds <- predict(lda_ft, newdata = vars_test, type = "prob")
-lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.005),
+lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.01),
                  "obs" = vars_test$class)
 lda_mod
 score(lda_mod)
@@ -281,11 +281,11 @@ score(lda_mod)
 # Write prediction model on test data
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify, k = 0.005)
+preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions15.csv", row.names = FALSE)
+write.csv(csv_file, "modelpredictions16.csv", row.names = FALSE)
 best_mod <- read.csv("modelpredictions13.csv")
 table("Best Model" = best_mod$class, csv_file$class)
 mean(best_mod$class == csv_file$class)
