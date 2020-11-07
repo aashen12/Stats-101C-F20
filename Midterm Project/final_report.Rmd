@@ -62,7 +62,10 @@ The reasoning for selecting LDA as our two model selections is clear, however we
 
 Figure 1 below shows how the WCA varies with increasing threshold for both candidate LDA models. This measurement greatly aided our selection of a candidate model.
 
-![WCA vs threshold for LDA models](threshold_plot.jpg)
+```{r, out.width='100%'}
+knitr::include_graphics("threshold_plot.jpg")
+```
+
 
 
 
