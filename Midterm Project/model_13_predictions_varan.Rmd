@@ -283,31 +283,32 @@ Note that `Broad_H3K36me3_percentage` and `Broad_H4K20me1_percentage` and `intol
 ```{r}
 #Initialize stuff 
 set.seed(420) #so we consistently generate the same random numbers
-reps = 30
+reps = 50
 seeds = sample(1:999999999, size = reps, replace = FALSE)
 lda_scores <- rep(NA, reps)
-logistic_scores <- lda_scores
+#logistic_scores <- lda_scores
 
 # Based on Andy's Analysis of the 32 predictors in Model 10
-good_predictors <- c("Missense_Entropy", "S50_score_replication_timing")
+good_predictors <- c("Missense_Entropy", "S50_score_replication_timing", "Broad_H3K4me2_percentage", "VEST_score",
+                     "BioGRID_log_degree", "N_Missense", "intolerant_pNull")
 potential_predictors <- c("Recurrent_missense_fraction", "Inframe_indel_fraction", "Lost_start_and_stop_fraction",
-                          "Exon_Cons", "VEST_score",
+                          "Exon_Cons",
                           "Cell_proliferation_rate_CRISPR_KD",
-                          "Broad_H3K4me2_percentage", "Broad_H3K27me3_percentage",
+                          "Broad_H3K27me3_percentage",
                           "Broad_H3K9me3_percentage", "Broad_H3K9ac_percentage", "Broad_H3K9me2_percentage", 
-                          "Broad_H4K20me1_percentage", "Polyphen2", "intolerant_pNull", "MGAentropy",
-                          "BioGRID_log_degree", "N_Missense", "ncGERP", "intolerant_pRec")
+                          "Polyphen2", "MGAentropy",
+                          "ncGERP", "intolerant_pRec")
 
 lda_list <- vector("list", length(potential_predictors))
 names(lda_list) <- potential_predictors
-logistic_list <- lda_list
+#logistic_list <- lda_list
 
 # Test with multiple seeds and record scores
 for(j in seq_len(length(potential_predictors))){
-
+  cat("Iteration ", j, " of ", length(potential_predictors), "\n") # So I don't lose my mind while waiting
 for (i in seq_len(reps)){
   set.seed(seeds[i])
-  cat("Iteration ", i, "\n") # So I don't lose my mind while waiting
+  #cat("Iteration ", j, " ", i, "\n") # So I don't lose my mind while waiting
   
  
   vars_subset <- vars[,c(good_predictors, potential_predictors[j], "class")]
@@ -322,37 +323,54 @@ for (i in seq_len(reps)){
   lda_ft <- train(class ~ ., data = vars_train, method = "lda",
                   preProc = c("center", "scale"), trControl = train_cont)
   preds <- predict(lda_ft, newdata = vars_test, type = "prob")
-  lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.005),
+  lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.0025),
                    "obs" = vars_test$class)
   lda_scores[i] <- score(lda_mod)
   
-  #Logistic Regression
-  log_reg <- invisible(nnet::multinom(class ~ ., data = vars_train)) 
-
-  log_preds <- predict(log_reg, newdata = vars_test, type = "probs")
-
-  log_mod <- table("pred"=apply(log_preds, 1, classify, k = 0.005), "obs" = vars_test$class)
-  
-  logistic_scores[i] <- score(log_mod)
+  # #Logistic Regression
+  # log_reg <- invisible(nnet::multinom(class ~ ., data = vars_train)) 
+  # 
+  # log_preds <- predict(log_reg, newdata = vars_test, type = "probs")
+  # 
+  # log_mod <- table("pred"=apply(log_preds, 1, classify, k = 0.005), "obs" = vars_test$class)
+  # 
+  # logistic_scores[i] <- score(log_mod)
 }
   lda_list[[j]] <- lda_scores
-  logistic_list[[j]] <- logistic_scores
+ # logistic_list[[j]] <- logistic_scores
 }
 
 ```
 
 ```{r}
-for(i in length(lda_list)){
-  summary(lda_list[[i]])
+for(i in 1:length(lda_list)){
+  cat(potential_predictors[i], "\n")
+  print(summary(lda_list[[i]]))
 }
 
-for(i in length(lda_list)){
-  summary(logistic_list[[i]])
-}
+# for(i in 1:length(lda_list)){
+#   cat(potential_predictors[i], "\n")
+#   print(summary(logistic_list[[i]]))
+# }
 ```
 
+After the first iteration, `Broad_H3K4me2_percentage` and `Broad_H3K9ac_percentage` were clearly performing the best, with WCA's of mid-high 58%. We'll add the former, as it performed ever so slightly better.
+
+After the second iteration, `VEST_score` clearly performed the best, with a mean of 0.6758 and median of 0.6686, `BioGRID_log_degree` also performed well with a mean and median around 0.656. We'll add the former.
+
+After the third iteration, `BioGRID_log_degree` is performing the best at ~0.713, as we expected. The rest of the predicotrs give us around 0.67, with `N_Nissense` just shy of 0.70. Runtime is getting relatively low, so I can increase the number of samples to 50 instead of 30 (so I actually have time to work on other stuff while it runs).
+
+`N_Missense` is clearly the best predictor of iteration 4. Averaging about 0.729.
+
+I had to look really closely at my screen for iteration 5. But it seems that `intolerant_pNull` is the best choice, it seems to have lower variance among all the predictors with averages around 0.731
+
+Only like a 0.002 increase in iteration 6. Best was just barely `Broad_H3K27me3_percentage`.
+
+Okay I tested all of the predictors and it literally performed just about the same as before the rest of them were added.
+
+
 ```{r}
-for (i in 18:length(lda_list)){
+for (i in 1:length(lda_list)){
   print(head(vars[,c(good_predictors, potential_predictors[i], "class")]))
 }
 ```
