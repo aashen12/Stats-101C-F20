@@ -51,10 +51,13 @@ There were many predictors in this data set that were of the same family and clo
 
 To select a threshold, we calculated the weighted categorization accuracy using 5-fold cross-validation across arbitrarily set seeds and selected the model with the WCA closest to 0.80. The threshold with the most consistent performance across all seeds centers from 0.005 to 0.025. 
 
-Our candidate model's WCA for the training data was `r round(0.8100, 3)`, which resulted in a WCA of `r round(0.85248, 3)` on the public leader board. 
+Our candidate model's WCA for the training data was `r round(0.8100, 3)`, which resulted in a WCA of `r round(0.85248, 3)` on the public leaderboard. 
 
+Predictor selection for our second candidate model was done similarly to our first model: we utilized the same predictors in this model compared to the first candidate. The key difference being the chosen significance level $\alpha$, as we opted for a slightly less strict threshold of 0.01. As such, our second model had 4 more predictors than the 29 in our first candidate model. 
 
-**Describe model 2 as a variant of the first model**
+As a result of the different predictors, our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our second candidate model performed most accurately and consistently with a threshold for classifying a given observation as a neutral gene versus an oncogene or tumor suppressor gene of approximately 0.01.
+
+Our second candidate model's WCA for the training data was `r round(0.8126137, 3)`, which resulted in a WCA of `r round(0.81130, 3)` on the public leaderboard.   
 
 The reasoning for selecting LDA as our two model selections is clear, however we believe our LDA model's threshold explains its strong performance: by lowering our threshold to a value no higher than 2.5%, we account for the uneven distribution and scoring of predicting different responses while simultaneously placing greater emphasis on the less likely responses (OGs and TSGs). This allows us to predict the less-frequent responses at more appropriate intervals, ultimately accounting for the WCA scoring.
 
@@ -66,7 +69,12 @@ Figure 1 below shows how the WCA varies with increasing threshold for both candi
 knitr::include_graphics("threshold_plot.jpg")
 ```
 
+### Conclusion
 
+
+### SOC
+
+### Code Appendix
 
 
 
