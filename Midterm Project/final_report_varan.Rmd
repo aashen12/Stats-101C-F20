@@ -58,7 +58,7 @@ Our candidate model's WCA for the training data was `r round(0.8100, 3)`, which 
 
 Predictor selection for our second candidate model (model 12 revised) was done similarly to our first model; we investigated the correlation between predictors and selectively pared them down before fitting a logistic regression model to identify significant predictors. The key difference being the chosen significance level $\alpha$, as we opted for a slightly less strict threshold of 0.05/6. **I think this was just an arbitrary significance level. Should I say that? Also, does "0.05/6" look better than "0.0083" or "approximately "0.008"?** As such, our second model had 4 more predictors than the 29 in our first candidate model. 
 
-As a result of the different predictors, our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our second candidate model performed most accurately and consistently with a threshold for classifing a given observation as a neutral gene versus an oncogene or tumor suppressor gene was approxmately 0.01.
+As a result of the different predictors, our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our second candidate model performed most accurately and consistently with a threshold for classifing a given observation as a neutral gene versus an oncogene or tumor suppressor gene of approxmately 0.01.
 
 Our second candidate model's WCA for the training data was `r round(0.8126137, 3)`, which resulted in a WCA of `r round(0.81130, 3)` on the public leaderboard.   
 
