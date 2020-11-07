@@ -204,7 +204,7 @@ cor_heatmap
 set.seed(12)
 mn <- nnet::multinom(class ~ ., data = vars, model = TRUE)
 tidymn <- broom::tidy(mn) %>% arrange(p.value)
-tidymn <- tidymn %>% filter(p.value < 0.05 / ncol(tidymn))
+tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
 terms <- unique(tidymn$term)[-1]
 terms
 ```
@@ -291,8 +291,8 @@ preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-write.csv(csv_file, "modelpredictions12_updated.csv", row.names = FALSE)
-best_mod <- read.csv("modelpredictions13.csv")
+#write.csv(csv_file, "modelpredictions12_updated.csv", row.names = FALSE)
+best_mod <- read.csv("modelpredictions12_updated.csv")
 table("Best Model" = best_mod$class, csv_file$class)
 mean(best_mod$class == csv_file$class)
 ```

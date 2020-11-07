@@ -3,6 +3,7 @@
 # Step 1: Look at variables and models holistically, see what stands out
 ## Predictors: Look for correlation, outliers
 ## Classification: See best WCA performers, least variable
+
 training <- read.csv("training.csv", stringsAsFactors = TRUE)
 sort(abs(cor(training)["class", ]), decreasing = TRUE)[2:19]
 training$class <- factor(training$class)
@@ -38,17 +39,6 @@ grid.arrange(grobs = scat_plot[21:40], ncol = 4)
 grid.arrange(grobs = scat_plot[41:60], ncol = 4)
 grid.arrange(grobs = scat_plot[61:80], ncol = 4)
 grid.arrange(grobs = scat_plot[81:98], ncol = 4)
-sig <- logical(98)
-names(sig) <- names(training)[-99]
-k <- 1
-diffs <- logical(98)
-for (var in names(training)[-99]) {
-  model <- aov(training[[var]] ~ factor(training$class))
-  sig[k] <- summary(model)[[1]][1, 5]
-  diffs[k] <- all(TukeyHSD(model)$`factor(training$class)`[, 4] < 0.05)
-  k <- k + 1
-}
-sort(sig[diffs])
 score <- function (conf_mat) {
   print(sum(diag(conf_mat) * c(1, 20, 20)))
   print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
@@ -87,9 +77,9 @@ cor_heatmap <- cor_heatmap +
 cor_heatmap
 
 # Run various fitted models to see which perform best with respect to variability and WCA
-scores_mat <- matrix(nrow = 10, ncol = 3)
+scores_mat <- matrix(nrow = 10, ncol = 4)
 k <- 1
-set.seed(11092020)
+set.seed(1223)
 for (i in runif(10, min = 1, max = 10^7)) {
   set.seed(i)
   vars <- training %>% select(Broad_H3K9ac_percentage, N_LOF, pLOF_Zscore,
@@ -124,11 +114,297 @@ for (i in runif(10, min = 1, max = 10^7)) {
   
   lda_mod <- table("pred"=apply(preds, 1, classify), "obs" = vars_test$class)
   scores_mat[k, 3] <- score(lda_mod)
+  mn <- nnet::multinom(class ~ ., data = vars_train, model = TRUE)
+  preds <- predict(mn, newdata = vars_test, type = "prob")
+  predclass <- apply(preds, 1, classify)
+  mn_mod <- table("pred"=predclass, "obs"=vars_test$class)
+  scores_mat[k, 4] <- score(mn_mod)
   k <- k + 1
 }
-colnames(scores_mat) <- c("KNN", "QDA", "LDA")
+colnames(scores_mat) <- c("KNN", "QDA", "LDA", "Logistic")
 data.frame(scores_mat)
+# LDA performs better and is less variable than the other models
 apply(scores_mat, 2, mean)
 apply(scores_mat, 2, sd)
 
-## Step 2: Consider removing observations and correlated predictors before 
+## Step 2: Consider removing observations and correlated predictors
+# Create an outlier function
+outlier <- function(data) {
+  low <- mean(data) - 3 * sd(data)
+  high <- mean(data) + 3 * sd(data)
+  which(data < low | data > high)
+}
+library(ggplot2)
+scatter <- function(var) {
+  ggplot(training, aes_string(var, "class")) +
+    geom_jitter(width = 0.05, height = 0.1, size = 0.1,
+                colour = rgb(0, 0, 0, alpha = 1 / 3))
+}
+scat_plot <- lapply(names(training)[-99], scatter)
+library(gridExtra)
+grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+outliers <- table(unlist(lapply(training[,-99], outlier)))
+outlier_index <- sort(outliers, decreasing = TRUE)
+# Remove 50 most common outlier observations (i.e. outliers across multiple predictors)
+training <- training[-as.numeric(names(outlier_index)[1:50]),]
+
+# The below variables had outstanding outliers which we chose to remove
+sort(training$Missense_TO_Silent_Ratio, decreasing = TRUE)[1:10]
+training <- training[-which(training$Missense_TO_Silent_Ratio > 100), ]
+sort(training$Missense_KB_Ratio, decreasing = TRUE)[1:10]
+training <- training[-which(training$Missense_KB_Ratio > 2000), ]
+sort(training$LOF_TO_Silent_Ratio, decreasing = TRUE)[1:10]
+training <- training[-which(training$LOF_TO_Silent_Ratio > 5), ]
+sort(training$Gene_expression_Z_score, decreasing = TRUE)[1:10]
+training <- training[-which(training$Gene_expression_Z_score > 4), ]
+sort(training$dN_to_dS_ratio, decreasing = TRUE)[1:10]
+training <- training[-which(training$dN_to_dS_ratio > 5),]
+sort(training$Silent_KB_Ratio, decreasing = TRUE)[1:10]
+training <- training[-which(training$Silent_KB_Ratio > 200), ]
+sort(training$Lost_start_and_stop_fraction, decreasing = TRUE)[1:10]
+training <- training[-which(training$Lost_start_and_stop_fraction > 0.2),]
+sort(training$Synonymous_Zscore, decreasing = FALSE)[1:10]
+training <- training[-which(training$Synonymous_Zscore < -15), ]
+numeric_training <- training[,-99]
+
+# Lots of zeroes for some observations, so removed those observations with quite a few zeroes across predictor variables
+n_zeroes <- rep(NA, nrow(numeric_training))
+
+for(i in seq_len(nrow(numeric_training))){
+  row_i_zeroes <- 0
+  for(j in seq_len(ncol(numeric_training))){
+    if(round(numeric_training[i,j], digits = 5) == 0){
+      row_i_zeroes <- row_i_zeroes + 1
+    }
+  }
+  n_zeroes[i] <- row_i_zeroes
+}
+# Remove observations with more than half of their predictor variable values as zero (possibly "junk" observations/irrelevant)
+training <- training[n_zeroes <= ncol(training) / 2, ]
+
+# Replot predictors vs. class to see if outliers properly removed
+library(ggplot2)
+scatter <- function(var) {
+  ggplot(training, aes_string(var, "class")) +
+    geom_jitter(width = 0.05, height = 0.1, size = 0.1,
+                colour = rgb(0, 0, 0, alpha = 1 / 3))
+}
+scat_plot <- lapply(names(training)[-99], scatter)
+library(gridExtra)
+grid.arrange(grobs = scat_plot[1:20], ncol = 4)
+grid.arrange(grobs = scat_plot[21:40], ncol = 4)
+grid.arrange(grobs = scat_plot[41:60], ncol = 4)
+grid.arrange(grobs = scat_plot[61:80], ncol = 4)
+grid.arrange(grobs = scat_plot[81:98], ncol = 4)
+
+# Look at correlation matrices for correlated variables
+library(dplyr)
+library(caret)
+set.seed(12)
+vars <- training
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
+library(reshape2)
+melted_cor_mtx <- melt(cor_mtx)
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
+cor_heatmap
+
+which(abs(cor_mtx) > 0.75, arr.ind = TRUE)
+# Eliminate all but one of a set of variables highly correlated with one another
+correlated <- c("id", "N_LOF", "CDS_length", "LOF_TO_Benign_Ratio",
+                "LOF_TO_Total_Ratio", "LOF_TO_Missense_Ratio",
+                "Inactivating_mutations_fraction", "Splice_TO_Benign_Ratio",
+                "Splice_TO_Total_Ratio", "Missense_TO_Benign_Ratio",
+                "NonSilent_TO_Silent_Ratio", "Missense_fraction",
+                "One_Minus_S50_score_replication_timing", "CNA_amplification",
+                "Gene_expression_Minus_Z_score", "log_gene_length",
+                "Minus_Cell_proliferation_rate_CRISPR_KD",
+                "Promoter_hypomethylation_in_cancer",
+                "Gene_body_hypomethylation_in_cancer",
+                "H3K4me2_width", "H3K9ac_width", "H3K9ac_height",
+                "Broad_H3K4me1_percentage",
+                "Broad_H3K27ac_percentage", "H3K4me1_width",
+                "H3K36me3_width", "H3K36me3_height",
+                "H3K27me3_width", "H3K27me3_height", "H3K9me3_width",
+                "H3K79me2_width", "H3K79me2_height", "H4K20me1_width")
+vars <- vars[, !(names(training) %in% correlated)]
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
+melted_cor_mtx <- melt(cor_mtx)
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
+cor_heatmap
+
+
+which(abs(cor_mtx) > 0.6, arr.ind = TRUE)
+# Eliminate all but one of a set of variables highly correlated with one another
+second_correlated <- c("Missense_KB_Ratio", "LOF_KB_Ratio", "Nonsense_fraction",
+                       "Frameshift_indel_fraction",
+                       "Missense_Damaging_TO_Benign_Ratio",
+                       "Missense_TO_Total_Ratio", "Silent_fraction",
+                       "BioGRID_clossness", "pLOF_Zscore",
+                       "Length_H3K4me3", "Broad_H3K4me3_percentage","H3K4me2_height",
+                       "H3K4me3_height", "H3K27ac_width", "H3K27ac_height",
+                       "H3K4me1_height", "H3K9me3_height",
+                       "Broad_H3K79me2_percentage", "intolerant_pLI",
+                       "Broad_H4K20me1_percentage", "Broad_H3K36me3_percentage")
+
+vars <- vars[, !(names(vars) %in% second_correlated)]
+
+cor_mtx <- round(cor(vars[, names(vars) != "class"]), 2)
+library(reshape2)
+melted_cor_mtx <- melt(cor_mtx)
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))
+cor_heatmap
+
+# Use logistic regression to see which variables are significant predictors
+set.seed(12)
+mn <- nnet::multinom(class ~ ., data = vars, model = TRUE)
+tidymn <- broom::tidy(mn) %>% arrange(p.value)
+tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
+terms <- unique(tidymn$term)[-1]
+terms
+
+# Define score (WCA) and classify functions
+#function to calculate wca
+score <- function (conf_mat) {
+  # Diagonal of matrix corresponds to correctly predicted classes
+  print(sum(diag(conf_mat) * c(1, 20, 20)))
+  print(sum(diag(conf_mat) * c(1, 20, 20)) / sum(apply(conf_mat, 2, sum) * c(1, 20, 20)))
+}
+
+# Set new threshold to account for unbalanced data
+classify <- function(probs, k) {
+  if (any(probs[2:3] > k)) {
+    subset <- probs[2:3]
+    output <- which(subset == max(subset))
+    if (length(output) > 1) {
+      output <- sample(1:2, 1)
+    }
+  } else {
+    output <- 0
+  }
+  output
+}
+
+## Step 3: Fit the models
+vars <- training %>% select(all_of(terms), class)
+set.seed(100)
+thresh_list <- list()
+length(thresh_list) <- 10
+j <- 1
+# for() loop to validate post cross-validation with WCA and varying thresholds
+for (rand in ceiling(runif(10, min = 1, max = 10000000))) {
+  set.seed(rand)
+  vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
+  vars_train <- vars[vars_split, ]
+  vars_test <- vars[-vars_split, ]
+  
+  train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+  lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
+                  trControl = train_cont)
+  preds <- predict(lda_ft, newdata = vars_test, type = "prob")
+  scores <- numeric(100)
+  for (i in seq(from = 0.001, to = 0.1, by = 0.001)) {
+    lda_mod <- table("pred"=apply(preds, 1, classify, k = i), "obs" = vars_test$class)
+    lda_mod
+    scores[i*1000] <- score(lda_mod)
+  }
+  thresh_list[[j]] <- scores
+  j <- j + 1
+}
+
+# Plot WCA as a function of threshold for various seeds to see best threshold
+thresh_vals <- c(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1)
+plot(thresh_list[[1]] ~ seq(from = 0.001, to = 0.1, by = 0.001),
+     type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5),
+     xaxt = "n", ylab = "WCA Percentage",
+     main = "WCA vs. Threshold for Different Seeds",
+     xlab = "Threshold for Choosing Between (0) and (1 and 2)")
+for (i in 2:10) {
+  red <- 0
+  green <- 0
+  blue <- 0
+  if (i %% 4 == 1) {red <- 0.5}
+  if (i %% 4 == 2) {green <- 0.5}
+  if (i %% 4 == 3) {blue <- 0.5}
+  lines(seq(from = 0.001, to = 0.1, by = 0.001), thresh_list[[i]],
+        col = rgb(red, green, blue, alpha = 0.5))
+  
+}
+abline(v = thresh_vals, col = rgb(0, 0, 0, alpha = 0.5))
+points(unlist(lapply(thresh_list, which.max)) * 0.001, unlist(lapply(thresh_list, max)),
+       pch = 19, cex = 0.5)
+axis(side = 1, at = thresh_vals, cex.axis = 0.75, las = 2)
+best_thresh <- unlist(lapply(thresh_list, which.max))
+median(best_thresh * 0.001)
+thresh_val_scores <- matrix(nrow = 10, ncol = length(thresh_vals))
+colnames(thresh_val_scores) <- thresh_vals
+for (i in 1:10) {
+  thresh_val_scores[i, ] <- thresh_list[[i]][thresh_vals * 1000]
+}
+apply(thresh_val_scores, 2, mean)
+
+### From the threshold plot above, LDA model seems to perform the best from thresholds that are rather small (less than 0.01)
+## Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak) as primary model
+## (closer to mean threshold)
+set.seed(123)
+vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
+vars_train <- vars[vars_split, ]
+vars_test <- vars[-vars_split, ]
+train_cont <- trainControl(method = "cv", number = 5,
+                           classProbs = TRUE, savePredictions = TRUE)
+lda_ft <- train(class ~ ., data = vars_train, method = "lda",
+                preProc = c("center", "scale"), trControl = train_cont)
+preds <- predict(lda_ft, newdata = vars_test, type = "prob")
+lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.005),
+                 "obs" = vars_test$class)
+lda_mod
+score(lda_mod)
+# write .csv file for prediction submission
+tests <- read.csv("test.csv")
+preds <- predict(lda_ft, newdata = tests, type = "prob")
+preds <- apply(preds, 1, classify, k = 0.005)
+names(preds) <- tests$id
+csv_file <- data.frame(id = tests$id,
+                       class = preds)
+# write.csv(csv_file, "modelpredictions13_pt2.csv", row.names = FALSE)
+
+## Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak) as secondary model
+## (to account for the few high thresholds for some seeds)
+set.seed(123)
+vars_test <- createDataPartition(vars$class, p = 0.8, 
+                                 list = FALSE)
+vars_train <- vars[vars_test, ]
+vars_test <- vars[-vars_test, ]
+train_cont <- trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = TRUE)
+lda_ft <- train(class ~ ., data = vars_train, method = "lda", preProc = c("center", "scale"),
+                trControl = train_cont)
+preds <- predict(lda_ft, newdata = vars_test, type = "prob")
+lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
+lda_mod
+score(lda_mod)
+# Write .csv file for prediction submission
+tests <- read.csv("test.csv")
+preds <- predict(lda_ft, newdata = tests, type = "prob")
+preds <- apply(preds, 1, classify, k = 0.01)
+names(preds) <- tests$id
+csv_file <- data.frame(id = tests$id,
+                       class = preds)
+# write.csv(csv_file, "modelpredictions13_pt2.csv", row.names = FALSE)
