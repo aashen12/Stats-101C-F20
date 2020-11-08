@@ -456,7 +456,7 @@ apply(thresh_val_scores, 2, mean)
 ## that are rather small (less than 0.01)
 ## Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
 ## as primary model because 0.05 is closer to mean threshold
-set.seed(123)
+set.seed(1248)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
 vars_test <- vars[-vars_split, ]
