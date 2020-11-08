@@ -76,9 +76,13 @@ The reasoning for selecting LDA as our two model selections is due to LDA's limi
 
 \newpage
 
-### SOC
+### Statement of Contribution
 
+Andy Shen was in charge of team organization and logistics. Andy was also the primary author of the final report. Andy also aided in the model fitting process by providing advice, double-checking work, and submitting his own predictions.
 
+Ethan Allavarpu was in charge of fitting the model and trying out different techniques. Andy and Varan would assist Ethan as needed and fit their own models as well. Ethan ensured every model submitted was valid and correct. Ethan assisted in fine-tuning the final report by ensuring that the correct models were depicted with the right measurements.
+
+Varan Nimar provided assistance with both model fitting and report writing. Varan would provide feedback on different models to fit and he proposed different techniques to try. Varan assisted Andy in writing and editing specific sections of the report.
 
 ### Appendix for R Code
 ```{r, eval = FALSE, echo = TRUE}
