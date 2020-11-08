@@ -84,7 +84,11 @@ Ethan Allavarpu was in charge of fitting the model and trying out different tech
 
 Varan Nimar provided assistance with both model fitting and report writing. Varan would provide feedback on different models to fit and he proposed different techniques to try. Varan assisted Andy in writing and editing specific sections of the report.
 
+\pagebreak
+
 ### Appendix for R Code
+
+
 ```{r, eval = FALSE, echo = TRUE}
 # Step 1: Look at variables and models holistically, see what stands out
 ## Predictors: Look for correlation, outliers
