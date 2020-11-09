@@ -1,10 +1,7 @@
 ---
 title: "Midterm Project - Gould Rush"
 subtitle: "Stats 101C Lecture 3"
-author:
-- Andy Shen
-- Ethan Allavarpu
-- Varan Nimar
+author: "Andy Shen, Ethan Allavarpu, Varan Nimar"
 date: "Fall 2020"
 output: pdf_document
 ---
@@ -60,15 +57,15 @@ knitr::include_graphics("correlation_heatmap.jpg")
 
 There were many predictors in this data set that were of the same family and closely correlated as well, so we repeated this methodology for all of the significant predictors of the same family. In this analysis, our significance level $\alpha$ was 0.05 divided by the number of predictors in the data set. We scale $\alpha$ because we want to decrease the likelihood of a false positive that could result from running the model multiple times across many different seeds.
 
-To select a model, we calculated the weighted categorization accuracy using 5-fold cross-validation across randomly set seeds and selected the model with the WCA that was neither the maxiumum nor minimum to account for possible overfitting. The thresholds with the most consistent performance across all seeds seems to occur at 0.01 or less. 
+To select a model, we calculated the weighted categorization accuracy using 5-fold cross-validation across randomly set seeds and selected the model with the WCA that was neither the maxiumum nor minimum to account for possible overfitting. The thresholds with the most consistent performance across all seeds seems to occur at 0.02 or less. 
 
-Our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our candidate model performed most accurately and consistently with a threshold of approximately 0.005 to 0.01 as seen in Figure 2. The threshold is regarding the probabilities for classes 1 and 2 (`OG` and `TSG`). If either of these classes exceeds the threshold, we take the higher probability of the two; if neither exceeds it, we choose class 0 (`NG`). Our primary candidate model's WCA for our training validation data was `r round(0.8100, 3)`, which resulted in a WCA of `r round(0.85248, 3)` on the public leaderboard for Kaggle. 
+Our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our candidate model performed most accurately and consistently with a threshold of approximately 0.005 to 0.015 as seen in Figure 2. The threshold is regarding the probabilities for classes 1 and 2 (`OG` and `TSG`). If either of these classes exceeds the threshold, we take the higher probability of the two; if neither exceeds it, we choose class 0 (`NG`). Our primary candidate model utilized a threshold of 0.01 because that was roughly where the median best threshold was (according to Figure 2); its WCA for our training validation data was `r round(0.8120073, 3)`, which resulted in a WCA of `r round(0.86109, 3)` on the public leaderboard for Kaggle. 
 
-Predictor selection for our second candidate model was done similarly to our first model: we utilized the same predictors in this model as the first candidate. The key difference between the two models was the chosen threshold of 0.01 (vs. 0.05 for the first model). As such, our second model was also less likely to choose genes of classes 1 and 2 unless the probabilities were greater than 1%, as opposed to 0.5% in candidate model 1. Our second candidate model's WCA for the training validation data was `r round(0.8241358, 3)`, which resulted in a WCA of `r round(0.81130, 3)` on the public leaderboard for Kaggle.   
+Predictor selection for our second candidate model was similar to our first model: we utilized the same subset of predictors. The key difference between the two models was the chosen threshold of 0.005 (vs. 0.01 for the first model). As such, our second model was also more likely to choose genes of classes 1 and 2 if the probabilities were greater than 0.5%, as opposed to 1% in candidate model 1. Our second candidate model's WCA for the training validation data was `r round(0.8223166, 3)`, which resulted in a WCA of `r round(0.86539, 3)` on the public leaderboard for Kaggle.   
 
-We selected the 0.005 threshold as our primary candidate model because as shown in Figure 2 (which shows how the WCA varies with increasing threshold for both candidate LDA models), many of the best threshold were below 0.005. However, we  included a threshold of 0.01 as a secondary candidate model since there were a few seeds for which a higher threshold performed better and we want to account for that possibility.
+We selected the 0.01 threshold as our primary candidate model because as shown in Figure 2 (which shows how the WCA varies with increasing threshold for both candidate LDA models), many of the best threshold were around 0.01. However, we  included a threshold of 0.005 as a secondary candidate model since there were a few seeds for which a lower threshold performed better and we want to account for that possibility.
 
-```{r, out.width='65%'}
+```{r, out.width='60%'}
 knitr::include_graphics("threshold_plot.jpg")
 ```
 
