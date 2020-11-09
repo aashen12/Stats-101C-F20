@@ -310,7 +310,7 @@ score(lda_mod)
 # Write prediction model on test data
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify, k = 0.005)
+preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)

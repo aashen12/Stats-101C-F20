@@ -51,7 +51,7 @@ After testing various thresholds, predictor combinations, and training/test data
 
 ### Candidate Models
 
-The predictors for our first candidate model (`Model 13`) were selected by examining a correlation heat map and fitting a logistic regression model with all predictors. Based on the predictors that were largely uncorrelated from the heat map, we examine all of the significant predictors from the logistic regression model and extract the top 29 predictors that were both significant in distinguishing between each of the three response classes *and* had low correlations with other predictors. For instance, many of the predictors beginning with `Broad_` were statistically significant, but were very closely correlated with other predictors of the same `Broad_` family. This led us to only select the most significant predictors from this family that had the least correlation with other predictors of the data set. The heat map is shown below in Figure 1.
+The predictors for our first candidate model (`Model 13`) were selected by examining a correlation heat map and fitting a logistic regression model with all predictors. Based on the predictors that were largely uncorrelated from the heat map, we examine all of the significant predictors from the logistic regression model and extract the top 28 predictors that were both significant in distinguishing between each of the three response classes *and* had low correlations with other predictors. For instance, many of the predictors beginning with `Broad_` were statistically significant, but were very closely correlated with other predictors of the same `Broad_` family. This led us to only select the most significant predictors from this family that had the least correlation with other predictors of the data set. The heat map is shown below in Figure 1.
 
 ```{r,out.width="80%"}
 knitr::include_graphics("correlation_heatmap.jpg")
@@ -221,7 +221,7 @@ for (i in runif(10, min = 1, max = 10^7)) {
 }
 colnames(scores_mat) <- c("KNN", "QDA", "LDA", "Logistic")
 data.frame(scores_mat)
-# LDA performs better and is less variable than the other models
+# LDA performs better and is generally less variable than the other models
 apply(scores_mat, 2, mean)
 apply(scores_mat, 2, sd)
 
@@ -387,6 +387,34 @@ tidymn <- tidymn %>% filter(p.value < 0.05 / nrow(tidymn))
 terms <- unique(tidymn$term)[-1]
 terms
 
+# Double check correlations of final terms
+
+library(dplyr)
+cor_mtx <- round(cor(vars[, names(vars) %in% terms]), 2)
+library(reshape2)
+melted_cor_mtx <- melt(cor_mtx)
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value, cex.axis = 0.5)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 4, hjust = 1)) +
+  theme(axis.text.y = element_text(angle = 0, vjust = 1, size = 4, hjust = 1))
+cor_heatmap
+terms <- terms[terms != "Broad_H3K4me2_percentage"]
+
+cor_mtx <- round(cor(vars[, names(vars) %in% terms]), 2)
+library(reshape2)
+melted_cor_mtx <- melt(cor_mtx)
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value, cex.axis = 0.5)) + geom_tile()
+cor_heatmap <- cor_heatmap +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 4, hjust = 1)) +
+  theme(axis.text.y = element_text(angle = 0, vjust = 1, size = 4, hjust = 1))
+cor_heatmap
+
 # Define score (WCA) and classify functions
 #function to calculate wca
 score <- function (conf_mat) {
@@ -411,7 +439,7 @@ classify <- function(probs, k) {
 
 ## Step 3: Fit the models
 vars <- training %>% select(all_of(terms), class)
-set.seed(100)
+set.seed(98764)
 thresh_list <- list()
 length(thresh_list) <- 10
 j <- 1
@@ -443,7 +471,8 @@ plot(thresh_list[[1]] ~ seq(from = 0.001, to = 0.1, by = 0.001),
      type = "l", ylim = c(0.6, 0.9), col = rgb(0, 0, 0, alpha = 0.5),
      xaxt = "n", ylab = "WCA Percentage",
      main = "WCA vs. Threshold for Different Seeds",
-     xlab = "Threshold for Choosing Between (0) and (1 and 2)")
+     xlab = "Threshold for Choosing Between (0) and (1 and 2)",
+     las = 2)
 for (i in 2:10) {
   red <- 0
   green <- 0
@@ -469,9 +498,9 @@ for (i in 1:10) {
 apply(thresh_val_scores, 2, mean)
 
 ### From the threshold plot above, LDA model seems to perform the best for thresholds
-## that are rather small (less than 0.01)
-## Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak)
-## as primary model because 0.05 is closer to mean threshold
+## that are rather small (not much larger than 0.01)
+## Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak)
+## as primary model because 0.01 is closer to median threshold
 set.seed(1248)
 vars_split <- createDataPartition(vars$class, p = 0.8, list = FALSE)
 vars_train <- vars[vars_split, ]
@@ -481,22 +510,22 @@ train_cont <- trainControl(method = "cv", number = 5,
 lda_ft <- train(class ~ ., data = vars_train, method = "lda",
                 preProc = c("center", "scale"), trControl = train_cont)
 preds <- predict(lda_ft, newdata = vars_test, type = "prob")
-lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.005),
+lda_mod <- table("pred" = apply(preds, 1, classify, k = 0.01),
                  "obs" = vars_test$class)
 lda_mod
 score(lda_mod)
 # write .csv file for prediction submission
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify, k = 0.005)
+preds <- apply(preds, 1, classify, k = 0.01)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions13_pt2.csv", row.names = FALSE)
+# write.csv(csv_file, "modelpredictions12_updated_pt3.csv", row.names = FALSE)
 
-## Use threshold of 0.01 for determining when to classify as OG or TSG (highest peak) as
-## secondary model since 0.01 better accounts for the few high thresholds for some seeds
-set.seed(123)
+## Use threshold of 0.005 for determining when to classify as OG or TSG (highest peak) as
+## secondary model since 0.005 better accounts for the few low thresholds for some seeds
+set.seed(1248)
 vars_test <- createDataPartition(vars$class, p = 0.8, 
                                  list = FALSE)
 vars_train <- vars[vars_test, ]
@@ -506,17 +535,17 @@ train_cont <- trainControl(method = "cv", number = 5,
 lda_ft <- train(class ~ ., data = vars_train, method = "lda",
                 preProc = c("center", "scale"), trControl = train_cont)
 preds <- predict(lda_ft, newdata = vars_test, type = "prob")
-lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.01), "obs" = vars_test$class)
+lda_mod <- table("pred"=apply(preds, 1, classify, k = 0.005), "obs" = vars_test$class)
 lda_mod
 score(lda_mod)
 # Write .csv file for prediction submission
 tests <- read.csv("test.csv")
 preds <- predict(lda_ft, newdata = tests, type = "prob")
-preds <- apply(preds, 1, classify, k = 0.01)
+preds <- apply(preds, 1, classify, k = 0.005)
 names(preds) <- tests$id
 csv_file <- data.frame(id = tests$id,
                        class = preds)
-# write.csv(csv_file, "modelpredictions13_pt2.csv", row.names = FALSE)
+# write.csv(csv_file, "modelpredictions13_pt4.csv", row.names = FALSE)
 ```
 
 
