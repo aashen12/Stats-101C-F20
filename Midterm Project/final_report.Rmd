@@ -390,7 +390,8 @@ library(dplyr)
 cor_mtx <- round(cor(vars[, names(vars) %in% terms]), 2)
 library(reshape2)
 melted_cor_mtx <- melt(cor_mtx)
-cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value, cex.axis = 0.5)) + geom_tile()
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value,
+                                                 cex.axis = 0.5)) + geom_tile()
 cor_heatmap <- cor_heatmap +
   scale_fill_gradient2(low = "blue", high = "red", mid = "white",
                        midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
@@ -403,7 +404,8 @@ terms <- terms[terms != "Broad_H3K4me2_percentage"]
 cor_mtx <- round(cor(vars[, names(vars) %in% terms]), 2)
 library(reshape2)
 melted_cor_mtx <- melt(cor_mtx)
-cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value, cex.axis = 0.5)) + geom_tile()
+cor_heatmap <- ggplot(data = melted_cor_mtx, aes(x = Var1, y = Var2, fill = value,
+                                                 cex.axis = 0.5)) + geom_tile()
 cor_heatmap <- cor_heatmap +
   scale_fill_gradient2(low = "blue", high = "red", mid = "white",
                        midpoint = 0, limit = c(-1, 1), space = "Lab", name="Correlation") + 
