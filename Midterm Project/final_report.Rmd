@@ -1,7 +1,10 @@
 ---
 title: "Midterm Project - Gould Rush"
 subtitle: "Stats 101C Lecture 3"
-author: "Andy Shen, Ethan Allavarpu, Varan Nimar"
+author:
+- Andy Shen
+- Ethan Allavarpu
+- Varan Nimar
 date: "Fall 2020"
 output: pdf_document
 ---
@@ -10,7 +13,7 @@ output: pdf_document
 library(tidyverse)
 library(knitr)
 # setwd("/Users/andyshen/Desktop/Git/Stats-101C-F20/Midterm Project")
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, fig.align = "center")
 train <- read.csv("training.csv")
 tbl <- 0
 fig <- 0
@@ -50,36 +53,27 @@ After testing various thresholds, predictor combinations, and training/test data
 
 The predictors for our first candidate model (`Model 13`) were selected by examining a correlation heat map and fitting a logistic regression model with all predictors. Based on the predictors that were largely uncorrelated from the heat map, we examine all of the significant predictors from the logistic regression model and extract the top 29 predictors that were both significant in distinguishing between each of the three response classes *and* had low correlations with other predictors. For instance, many of the predictors beginning with `Broad_` were statistically significant, but were very closely correlated with other predictors of the same `Broad_` family. This led us to only select the most significant predictors from this family that had the least correlation with other predictors of the data set. The heat map is shown below in Figure 1.
 
-```{r,out.width="50%"}
+```{r,out.width="80%"}
 knitr::include_graphics("correlation_heatmap.jpg")
 ```
 
 
 There were many predictors in this data set that were of the same family and closely correlated as well, so we repeated this methodology for all of the significant predictors of the same family. In this analysis, our significance level $\alpha$ was 0.05 divided by the number of predictors in the data set. We scale $\alpha$ because we want to decrease the likelihood of a false positive that could result from running the model multiple times across many different seeds.
 
-To select a threshold, we calculated the weighted categorization accuracy using 5-fold cross-validation across randomly set seeds and selected the model with the WCA that was neither the maxiumum nor minimum to account for possible over fitting. The thresholds with the most consistent performance across all seeds seems to occur at 0.01 or less. 
+To select a model, we calculated the weighted categorization accuracy using 5-fold cross-validation across randomly set seeds and selected the model with the WCA that was neither the maxiumum nor minimum to account for possible overfitting. The thresholds with the most consistent performance across all seeds seems to occur at 0.01 or less. 
 
-As a result of the different predictors, our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our candidate model performed most accurately and consistently with a threshold of approximately 0.005 to 0.01 as seen in Figure 2. The threshold is regarding the probabilities for classes 1 and 2 (`OG` and `TSG`). If either of these classes exceeds the threshold, we take the higher probability of the two; if neither exceeds it, we choose class 0 (`NG`). 
+Our weighted categorization accuracy calculations during 5-fold cross-validation revealed that our candidate model performed most accurately and consistently with a threshold of approximately 0.005 to 0.01 as seen in Figure 2. The threshold is regarding the probabilities for classes 1 and 2 (`OG` and `TSG`). If either of these classes exceeds the threshold, we take the higher probability of the two; if neither exceeds it, we choose class 0 (`NG`). Our primary candidate model's WCA for our training validation data was `r round(0.8100, 3)`, which resulted in a WCA of `r round(0.85248, 3)` on the public leaderboard for Kaggle. 
 
-Our candidate model's WCA for our training validation data was `r round(0.8100, 3)`, which resulted in a WCA of `r round(0.85248, 3)` on the public leaderboard for Kaggle. 
+Predictor selection for our second candidate model was done similarly to our first model: we utilized the same predictors in this model as the first candidate. The key difference between the two models was the chosen threshold of 0.01 (vs. 0.05 for the first model). As such, our second model was also less likely to choose genes of classes 1 and 2 unless the probabilities were greater than 1%, as opposed to 0.5% in candidate model 1. Our second candidate model's WCA for the training validation data was `r round(0.8241358, 3)`, which resulted in a WCA of `r round(0.81130, 3)` on the public leaderboard for Kaggle.   
 
-Predictor selection for our second candidate model was done similarly to our first model: we utilized the same predictors in this model as the first candidate. The key difference between the two models was the chosen threshold of 0.01 (vs. 0.05 for the first model). As such, our second model was also less likely to choose genes of classes 1 and 2 unless the probabilities were greater than 1%, as opposed to 0.5% in candidate model 1. 
+We selected the 0.005 threshold as our primary candidate model because as shown in Figure 2 (which shows how the WCA varies with increasing threshold for both candidate LDA models), many of the best threshold were below 0.005. However, we  included a threshold of 0.01 as a secondary candidate model since there were a few seeds for which a higher threshold performed better and we want to account for that possibility.
 
-Our second candidate model's WCA for the training validation data was `r round(0.8241358, 3)`, which resulted in a WCA of `r round(0.81130, 3)` on the public leaderboard for Kaggle.   
-
-We selected the 0.005 threshold as our primary candidate model because as shown in Figure 2, many of the best threshold were below 0.005. However, we still included a threshold of 0.01 as our secondary candidate model because there were a few seeds for which a higher threshold performed better and we want to account for that possibility.
-
-Figure 2 below shows how the WCA varies with increasing threshold for both candidate LDA models. This measurement greatly aided our selection of a candidate model.
-
-```{r, out.width='100%'}
+```{r, out.width='65%'}
 knitr::include_graphics("threshold_plot.jpg")
 ```
 
 
-The reasoning for selecting LDA as our two model selections is due to LDA's limited flexibility, which accounts for less variability and provides more consistent WCA scores across various subsets of training and test data. Nonetheless, we believe our LDA model's threshold provides enough flexibility to account for its strong performance: by lowering our threshold to a value no higher than 1%, we account for the uneven distribution and scoring of predicting different responses while simultaneously placing greater emphasis on the less likely responses (OGs and TSGs) because they are weighted more heavily. This allows us to predict the less-frequent responses at more appropriate intervals, ultimately accounting for the WCA.
-
-#### THIS IS ADDED--CHECK TO SEE IF MAKES SENSE
-Overall, we believe that our model balances the bias-variance tradeoff adequately and, when combined with the preprocessing we did on the data (both with respect to predictors as well as outlier/extreme observations), enables us to get a better predictability for future observations (i.e. test data), which we can see in our Kaggle score and WCA performance.
+The reasoning for selecting LDA for our two model selections is due to LDA's limited flexibility, which has less variability and provides more consistent WCA scores across various subsets of training and test data. Nonetheless, we believe our LDA model's threshold provides enough flexibility to account for its strong performance: by lowering our threshold to a value no higher than 1%, we account for the uneven distribution and scoring of different responses by  placing greater emphasis on the less likely responses (OGs and TSGs) because they are weighted more heavily. This allows us to predict the less-frequent responses at more appropriate intervals, ultimately aiding our WCA score. Overall, we believe that our model balances the bias-variance tradeoff adequately and, when combined with the preprocessing we did on the data (both with respect to predictors as well as outlier/extreme observations), enables us to get a better predictability for future observations (i.e. test data), which we can see in our Kaggle score and WCA performance.
 
 ---
 
